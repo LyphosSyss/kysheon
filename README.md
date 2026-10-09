@@ -20,11 +20,12 @@ appareils et un **protocole binaire** conçu et testé.
 | Session (HELLO, READY/START, heartbeat, pause, abandon, revanche) | fait | tests en temps virtuel |
 | Simulation d’une moitié (pas fixe 60 Hz, collisions balayées, handoff) | fait | tests JVM + Kotlin/Native |
 | Partie complète entre deux appareils simulés (50 ms + 20 ms de gigue) | fait | `FullMatchTest` |
-| Lien BLE Android (host et guest) | écrit | compilation + lint uniquement, **non vérifié sur appareil** |
-| Lien BLE iOS (guest, puis host) | en cours | — |
-| Sonde de latence (écran de mesure, Android) | écrite | tests en temps virtuel ; **non vérifiée sur appareil** |
-| Écrans de jeu, overlay de debug | à faire | — |
-| **Fonctionnement sur appareil** | **non vérifié** | voir [`docs/MANUAL-TESTS.md`](docs/MANUAL-TESTS.md) |
+| Lien BLE Android (host et guest) | fait | **vérifié sur téléphones** (Nothing Phone (1) ↔ CMF Phone 1, les deux sens), 2026-10-09 |
+| Lien BLE iOS (guest et host) | écrit | compilation uniquement, **non vérifié sur iPhone** |
+| Sonde de latence (écran de mesure) | fait | tests en temps virtuel ; mesures réelles ci-dessous |
+| Écrans de jeu, overlay de debug | fait | partie complète et revanche jouées sur les deux Android ; build Xcode + simulateur iOS (accueil) |
+| Android ↔ iOS | **non vérifié** | demande l’iPhone 16e, voir [`docs/manual-tests/ios-ble.md`](docs/manual-tests/ios-ble.md) |
+| Coupure Bluetooth en pleine partie, hors de portée, arrière-plan | **non vérifié** | voir [`docs/MANUAL-TESTS.md`](docs/MANUAL-TESTS.md) |
 
 ## Principe
 
@@ -83,14 +84,26 @@ Synchronisation d’horloge : [`docs/CLOCK-SYNC.md`](docs/CLOCK-SYNC.md).
 
 ## Latences mesurées
 
-Mesures faites avec l’écran « Sonde de latence », au moins 30 s, téléphones côte à côte.
+Mesures réelles du 2026-10-09 avec l’écran « Sonde de latence » (PING toutes les 100 ms, fenêtre de 300 échantillons),
+téléphones côte à côte. Le RTT est mesuré par chaque téléphone sur ses propres PING ; le décalage est
+`horloge du pair − horloge locale`, avec sa borne d’erreur (RTT min de la dernière rafale / 2).
 
-| Liaison | Host → guest | RTT min | RTT médian | RTT p95 | Gigue | MTU |
-|---|---|---|---|---|---|---|
-| Nothing Phone (1) → CMF Phone 1 | Android → Android | non mesuré | non mesuré | non mesuré | non mesuré | non mesuré |
-| CMF Phone 1 → Nothing Phone (1) | Android → Android | non mesuré | non mesuré | non mesuré | non mesuré | non mesuré |
-| Android → iPhone 16e | Android → iOS | non mesuré | non mesuré | non mesuré | non mesuré | non mesuré |
-| iPhone 16e → Android | iOS → Android | non mesuré | non mesuré | non mesuré | non mesuré | non mesuré |
+| Liaison (host → guest) | Mesuré sur | Durée | RTT min | RTT médian | RTT p95 | RTT max | Gigue | Pertes | MTU |
+|---|---|---|---|---|---|---|---|---|---|
+| Nothing Phone (1) → CMF Phone 1 | host (Nothing) | 271 s | 19,0 ms | 34,8 ms | 51,8 ms | 89,0 ms | 10,1 ms | 0 | 517 |
+| Nothing Phone (1) → CMF Phone 1 | guest (CMF) | 248 s | 21,5 ms | 41,5 ms | 60,0 ms | 115,1 ms | 10,4 ms | 0 | 517 |
+| CMF Phone 1 → Nothing Phone (1) | host (CMF) | 43 s | 20,4 ms | 33,5 ms | 49,7 ms | 61,9 ms | 9,9 ms | 0 | 517 |
+| CMF Phone 1 → Nothing Phone (1) | guest (Nothing) | 42 s | 19,3 ms | 34,5 ms | 44,7 ms | 57,9 ms | 6,7 ms | 0 | 517 |
+| Android → iPhone 16e | — | — | non mesuré | non mesuré | non mesuré | non mesuré | non mesuré | — | — |
+| iPhone 16e → Android | — | — | non mesuré | non mesuré | non mesuré | non mesuré | non mesuré | — | — |
+
+Observé dans les journaux système : intervalle de connexion 15 ms (12 × 1,25 ms, brièvement 7,5 ms), PHY LE 2M.
+Décalage d’horloge mesuré de part et d’autre : +122,5 ± 9,6 ms et −127,1 ± 10,8 ms, cohérents entre eux.
+La dérive affichée par la sonde n’est **pas encore exploitable** : avec ± 10 ms d’incertitude sur le décalage,
+quelques minutes ne suffisent pas à estimer quelques ppm (valeurs observées de signes contradictoires).
+
+**Conséquence pour le jeu** : environ 17–25 ms par trajet en médiane, bien en dessous du rattrapage maximal de
+200 ms appliqué à un projectile qui change d’écran. Le design du handoff est conservé tel quel.
 
 ## Construire et tester
 
@@ -120,7 +133,8 @@ Versions et compatibilités : [KYS-0004](docs/decisions/0004-toolchain-versions.
 
 ## Limites connues
 
-- Rien n’a encore été vérifié sur téléphone.
+- Seul le scénario Android ↔ Android a été vérifié sur téléphones ; rien n’a été vérifié sur iPhone.
+- La dérive d’horloge affichée par la sonde n’est pas fiable sur quelques minutes.
 - Le simulateur iOS n’a pas de Bluetooth : tout test iOS se fait sur un iPhone réel.
 - iOS ne permet pas de régler l’intervalle de connexion BLE ; il sera mesuré et documenté.
 - Pas de reconnexion automatique en V1 : une perte de lien ramène à l’accueil.

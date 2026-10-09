@@ -143,17 +143,24 @@ L’erreur 133 (`GATT_ERROR`) ne se provoque pas à la demande. Méthodes possib
 
 | Section | A (Nothing Phone 1) | B (CMF Phone 1) | Remarques |
 |---|---|---|---|
-| Versions d’Android | non mesuré | non mesuré | |
-| 1.1 Permissions Android 12+ | non mesuré | non mesuré | |
+| Versions d’Android | Android 15 (API 35) | Android 16 (API 36) | 2026-10-09 |
+| 1.1 Permissions Android 12+ | OK | OK | demande système, puis « Bluetooth prêt » |
 | 1.2 Repli Android 8–11 | non testable | non testable | aucun appareil < 12 |
 | 1.3 Bluetooth éteint au lancement | non mesuré | non mesuré | |
-| 2. A hôte, B invité : délai jusqu’à `Connected` | non mesuré | non mesuré | |
-| 2. MTU observée | non mesuré | non mesuré | |
-| 2. Trames perdues / profondeur max de file | non mesuré | non mesuré | |
-| 3. B hôte, A invité | non mesuré | non mesuré | |
+| 2. A hôte, B invité : délai jusqu’à `Connected` | — | ≈ 2,5 s après « Rejoindre » | après correctifs KYS-0024 |
+| 2. MTU observée | 517 | 517 | demandée : 247 |
+| 2. Trames perdues / profondeur max de file | 0 ping perdu | 0 ping perdu | profondeur non relevée |
+| 3. B hôte, A invité | OK | OK | 0 ping perdu, RTT médian ≈ 34 ms |
 | 4. Bluetooth coupé (côté hôte / côté invité) | non mesuré | non mesuré | codes : |
 | 5. Hors de portée (délai, code) | non mesuré | non mesuré | |
 | 6. Arrière-plan / écran verrouillé | non mesuré | non mesuré | |
 | 7. 10 cycles connexion / fermeture | non mesuré | non mesuré | |
 | 7. Limite de scans rapprochés | non mesuré | non mesuré | |
 | 8. Erreur 133 et nouvelle tentative | non mesuré | non mesuré | |
+
+### Journal des essais
+
+- **2026-10-09, essai 1** (Nothing hôte, CMF invité) : connexion GATT établie mais invité bloqué après la MTU,
+  hôte qui retient un appareil parasite. Deux bugs corrigés, voir [KYS-0024](decisions/0024-android-ble-device-findings.md).
+- **2026-10-09, essai 2** : sonde dans les deux sens, 0 perte (mesures dans le README) ; partie complète jouée,
+  « Victoire » sur le Nothing et « Défaite » sur le CMF, PV cohérents des deux côtés ; revanche OK.
