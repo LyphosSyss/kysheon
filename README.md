@@ -20,9 +20,9 @@ appareils et un **protocole binaire** conçu et testé.
 | Session (HELLO, READY/START, heartbeat, pause, abandon, revanche) | fait | tests en temps virtuel |
 | Simulation d’une moitié (pas fixe 60 Hz, collisions balayées, handoff) | fait | tests JVM + Kotlin/Native |
 | Partie complète entre deux appareils simulés (50 ms + 20 ms de gigue) | fait | `FullMatchTest` |
-| Lien BLE Android (host et guest) | en cours | — |
+| Lien BLE Android (host et guest) | écrit | compilation + lint uniquement, **non vérifié sur appareil** |
 | Lien BLE iOS (guest, puis host) | en cours | — |
-| Sonde de latence (écran de mesure) | en cours | — |
+| Sonde de latence (écran de mesure, Android) | écrite | tests en temps virtuel ; **non vérifiée sur appareil** |
 | Écrans de jeu, overlay de debug | à faire | — |
 | **Fonctionnement sur appareil** | **non vérifié** | voir [`docs/MANUAL-TESTS.md`](docs/MANUAL-TESTS.md) |
 

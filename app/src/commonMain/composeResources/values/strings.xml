@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kysheon</string>
+    <string name="decimal_separator">.</string>
+    <string name="value_pending">…</string>
+
+    <string name="home_tagline">Two phones, one arena.</string>
+    <string name="home_host">Host</string>
+    <string name="home_join">Join</string>
+    <string name="home_probe_hint">Latency probe: put both phones side by side, host on one, join on the other.</string>
+
+    <string name="bt_ready">Bluetooth ready</string>
+    <string name="bt_off">Bluetooth is off</string>
+    <string name="bt_unauthorized">Bluetooth access is not allowed</string>
+    <string name="bt_unsupported">This device does not support Bluetooth Low Energy</string>
+    <string name="bt_platform_pending">The Bluetooth link is not available on this platform yet</string>
+
+    <string name="action_grant">Allow Bluetooth</string>
+    <string name="action_enable">Turn on Bluetooth</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_finish">Finish</string>
+
+    <string name="role_host">Host, left half</string>
+    <string name="role_guest">Guest, right half</string>
+
+    <string name="state_idle">Idle</string>
+    <string name="state_advertising">Waiting for a guest…</string>
+    <string name="state_scanning">Looking for a host…</string>
+    <string name="state_connecting">Connecting…</string>
+    <string name="state_connected">Connected</string>
+    <string name="state_lost">Connection lost</string>
+
+    <string name="lost_bluetooth_off">Bluetooth was turned off.</string>
+    <string name="lost_permission">Bluetooth permission was denied.</string>
+    <string name="lost_unsupported">Bluetooth Low Energy is not supported.</string>
+    <string name="lost_not_found">No host found nearby.</string>
+    <string name="lost_connection_failed">The connection failed.</string>
+    <string name="lost_peer">The other phone disconnected.</string>
+    <string name="lost_code">Code %1$s</string>
+
+    <string name="probe_title">Latency probe</string>
+    <string name="probe_device">Device: %1$s</string>
+    <string name="probe_elapsed">Elapsed: %1$s s</string>
+    <string name="probe_hint">Let it run for at least 30 s, then take a screenshot on both phones.</string>
+    <string name="probe_samples">Samples</string>
+    <string name="probe_rtt">Round trip (RTT)</string>
+    <string name="probe_rtt_values">min %1$s · median %2$s · p95 %3$s · max %4$s ms</string>
+    <string name="probe_jitter">Jitter</string>
+    <string name="probe_offset">Clock offset</string>
+    <string name="probe_offset_value">%1$s ms ± %2$s ms</string>
+    <string name="probe_drift">Clock drift</string>
+    <string name="probe_drift_value">%1$s ppm</string>
+    <string name="probe_lost">Lost pings</string>
+    <string name="probe_mtu">MTU</string>
+    <string name="probe_frames">Frames sent / received</string>
+    <string name="probe_frames_value">%1$s / %2$s</string>
+    <string name="probe_peer_version">Peer protocol</string>
+    <string name="probe_incompatible">Incompatible protocol version (%1$s). Update both phones.</string>
+    <string name="value_ms">%1$s ms</string>
+</resources>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="decimal_separator">,</string>
+
+    <string name="home_tagline">Deux téléphones, une seule arène.</string>
+    <string name="home_host">Héberger</string>
+    <string name="home_join">Rejoindre</string>
+    <string name="home_probe_hint">Sonde de latence : pose les deux téléphones côte à côte, héberge sur l’un, rejoins sur l’autre.</string>
+
+    <string name="bt_ready">Bluetooth prêt</string>
+    <string name="bt_off">Le Bluetooth est désactivé</string>
+    <string name="bt_unauthorized">L’accès au Bluetooth n’est pas autorisé</string>
+    <string name="bt_unsupported">Cet appareil ne prend pas en charge le Bluetooth Low Energy</string>
+    <string name="bt_platform_pending">La liaison Bluetooth n’est pas encore disponible sur cette plateforme</string>
+
+    <string name="action_grant">Autoriser le Bluetooth</string>
+    <string name="action_enable">Activer le Bluetooth</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_finish">Terminer</string>
+
+    <string name="role_host">Hôte, moitié gauche</string>
+    <string name="role_guest">Invité, moitié droite</string>
+
+    <string name="state_idle">Inactif</string>
+    <string name="state_advertising">En attente d’un invité…</string>
+    <string name="state_scanning">Recherche d’un hôte…</string>
+    <string name="state_connecting">Connexion…</string>
+    <string name="state_connected">Connecté</string>
+    <string name="state_lost">Connexion perdue</string>
+
+    <string name="lost_bluetooth_off">Le Bluetooth a été désactivé.</string>
+    <string name="lost_permission">L’autorisation Bluetooth a été refusée.</string>
+    <string name="lost_unsupported">Le Bluetooth Low Energy n’est pas pris en charge.</string>
+    <string name="lost_not_found">Aucun hôte trouvé à proximité.</string>
+    <string name="lost_connection_failed">La connexion a échoué.</string>
+    <string name="lost_peer">L’autre téléphone s’est déconnecté.</string>
+    <string name="lost_code">Code %1$s</string>
+
+    <string name="probe_title">Sonde de latence</string>
+    <string name="probe_device">Appareil : %1$s</string>
+    <string name="probe_elapsed">Durée : %1$s s</string>
+    <string name="probe_hint">Laisse tourner au moins 30 s, puis fais une capture d’écran sur les deux téléphones.</string>
+    <string name="probe_samples">Échantillons</string>
+    <string name="probe_rtt">Aller-retour (RTT)</string>
+    <string name="probe_rtt_values">min %1$s · médiane %2$s · p95 %3$s · max %4$s ms</string>
+    <string name="probe_jitter">Gigue</string>
+    <string name="probe_offset">Décalage d’horloge</string>
+    <string name="probe_offset_value">%1$s ms ± %2$s ms</string>
+    <string name="probe_drift">Dérive d’horloge</string>
+    <string name="probe_drift_value">%1$s ppm</string>
+    <string name="probe_lost">Pings perdus</string>
+    <string name="probe_mtu">MTU</string>
+    <string name="probe_frames">Trames envoyées / reçues</string>
+    <string name="probe_frames_value">%1$s / %2$s</string>
+    <string name="probe_peer_version">Protocole du pair</string>
+    <string name="probe_incompatible">Version de protocole incompatible (%1$s). Mets à jour les deux téléphones.</string>
+    <string name="value_ms">%1$s ms</string>
+</resources>

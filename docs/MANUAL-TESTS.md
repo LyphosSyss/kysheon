@@ -26,6 +26,23 @@ Implémentation testée : `AndroidBleLink` (`link/src/androidMain/.../ble/`), d�
 
 Dans ce document, **A** = Nothing Phone 1, **B** = CMF Phone 1.
 
+### 0. Sonde de latence (à faire en premier)
+
+L’APK de mesure ouvre directement l’écran « Sonde de latence » après la connexion (le jeu n’est pas encore branché).
+Elle exécute le vrai protocole (HELLO, PING/PONG toutes les 100 ms, HEARTBEAT chaque seconde) et affiche :
+RTT min / médian / p95 / max, gigue, décalage d’horloge et sa borne d’erreur, dérive en ppm, pings perdus, MTU,
+trames émises / reçues, version du protocole du pair.
+
+1. Installer l’APK sur les deux téléphones (voir « Préparation »).
+2. A : « Héberger ». B : « Rejoindre ». Attendre l’écran « Sonde de latence » des deux côtés.
+3. Laisser tourner **au moins 30 s** (60 s si possible), téléphones côte à côte, sans y toucher.
+4. Faire une capture d’écran **sur les deux téléphones** (l’appareil et le rôle sont affichés en haut).
+5. « Terminer » des deux côtés, puis recommencer en inversant les rôles (B héberge, A rejoint).
+6. Reporter les valeurs dans le tableau « Latences mesurées » du README (ou envoyer les 4 captures).
+
+Attendu : pings perdus à 0 ou presque ; RTT min de l’ordre de 1 à 2 intervalles de connexion (souvent 15–60 ms) ;
+borne d’erreur du décalage ≈ RTT min / 2 ; dérive de quelques dizaines de ppm au plus.
+
 ### 1. Permissions
 
 **1.1 Android 12+ (les deux téléphones)**

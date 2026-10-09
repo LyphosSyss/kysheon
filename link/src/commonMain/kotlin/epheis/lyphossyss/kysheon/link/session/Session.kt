@@ -346,7 +346,10 @@ class Session(
     private suspend fun burst(): List<SyncSample> {
         val samples = ArrayList<SyncSample>(config.burstSize)
         repeat(config.burstSize) {
-            while (pongs.tryReceive().isSuccess) Unit
+            // Drop pongs left over from a previous burst.
+            while (true) {
+                if (pongs.tryReceive().isFailure) break
+            }
             sendMessage(tracker.nextPing())
             withTimeoutOrNull(config.pongTimeout) { pongs.receive() }?.let(samples::add)
         }

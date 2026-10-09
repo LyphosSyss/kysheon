@@ -38,3 +38,7 @@ Le corps cite les fiches liées avec des liens relatifs, par ex. `[KYS-0002](000
 | [KYS-0005](0005-no-graphics-engine.md) | Pas de moteur graphique tiers, rendu maison | accepted |
 | [KYS-0006](0006-mobile-only.md) | Android et iOS uniquement | accepted |
 | [KYS-0010](0010-game-core-no-alloc-handoff.md) | Simulation sans allocation et entrée déterministe des projectiles | accepted |
+| [KYS-0020](0020-android-ble-event-loop.md) | BLE Android : boucle d’événements, sessions, file d’écriture | proposed |
+| [KYS-0021](0021-android-ble-host-role.md) | BLE Android : rôle hôte | proposed |
+| [KYS-0022](0022-android-ble-guest-role.md) | BLE Android : rôle invité | proposed |
+| [KYS-0023](0023-link-android-lint.md) | Lint du module `:link` | proposed |
