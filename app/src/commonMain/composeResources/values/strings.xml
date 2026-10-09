@@ -49,7 +49,7 @@
     <string name="probe_offset">Clock offset</string>
     <string name="probe_offset_value">%1$s ms ± %2$s ms</string>
     <string name="probe_drift">Clock drift</string>
-    <string name="probe_drift_value">%1$s ppm</string>
+    <string name="probe_drift_value">%1$s ± %2$s ppm</string>
     <string name="probe_lost">Lost pings</string>
     <string name="probe_mtu">MTU</string>
     <string name="probe_frames">Frames sent / received</string>

@@ -92,7 +92,7 @@ fun ProbeScreen(screen: Screen.Probe, onFinish: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Metric(stringResource(Res.string.probe_samples), stats.samples.toString())
-            Metric(
+            StackedMetric(
                 stringResource(Res.string.probe_rtt),
                 stringResource(
                     Res.string.probe_rtt_values,
@@ -107,7 +107,12 @@ fun ProbeScreen(screen: Screen.Probe, onFinish: () -> Unit) {
             )
             Metric(
                 stringResource(Res.string.probe_drift),
-                stats.driftPpm?.let { stringResource(Res.string.probe_drift_value, formatOneDecimal(it, sep)) } ?: pending,
+                run {
+                    val drift = stats.driftPpm
+                    val bound = stats.driftBoundPpm
+                    if (drift == null || bound == null) pending
+                    else stringResource(Res.string.probe_drift_value, formatOneDecimal(drift, sep), formatOneDecimal(bound, sep))
+                },
             )
             Metric(stringResource(Res.string.probe_lost), stats.lostPings.toString())
             Metric(stringResource(Res.string.probe_mtu), diagnostics?.mtu?.toString() ?: pending)
@@ -133,5 +138,16 @@ private fun Metric(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         KText(label, color = KColors.muted, size = 14.sp)
         KText(value, size = 14.sp, monospace = true)
+    }
+}
+
+/** Label above, value below and right-aligned: for values too long to share a line with their label. */
+@Composable
+private fun StackedMetric(label: String, value: String) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        KText(label, color = KColors.muted, size = 14.sp)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            KText(value, size = 14.sp, monospace = true)
+        }
     }
 }

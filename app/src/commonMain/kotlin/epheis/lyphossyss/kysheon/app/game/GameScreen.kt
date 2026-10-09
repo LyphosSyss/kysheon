@@ -106,7 +106,8 @@ fun GameScreen(screen: Screen.Game, onRematch: () -> Unit, onLeave: () -> Unit) 
             val sim = match.simulation ?: return@Canvas
             val frame = frameNanos // read in the draw phase: redraws every frame without recomposing
             with(renderer) {
-                drawArena(sim, match.alpha, Letterbox(size.width, size.height, sim.aspect), frame)
+                val roundOver = session.state.value is SessionState.Ended
+                drawArena(sim, match.alpha, Letterbox(size.width, size.height, sim.aspect), frame, showProjectiles = !roundOver)
             }
         }
 

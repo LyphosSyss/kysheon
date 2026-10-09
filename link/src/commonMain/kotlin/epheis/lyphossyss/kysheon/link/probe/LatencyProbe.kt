@@ -27,7 +27,9 @@ import kotlin.time.Duration.Companion.seconds
  * - [jitterMicros]: mean absolute difference between consecutive RTTs (RFC 3550 spirit, applied to the RTT).
  * - [offsetMicros]: estimated `peer clock − local clock`, from the smallest-RTT sample of the last burst;
  *   its error is at most [offsetBoundMicros].
- * - [driftPpm]: how fast the offset moves (crystal drift between the two phones), from the first burst to now.
+ * - [driftPpm]: how fast the offset moves (crystal drift between the two phones), from the first burst to now,
+ *   with [driftBoundPpm] its worst-case error (both offset bounds over the time span). Reported after 30 s only:
+ *   with ± 10 ms on each offset, a few ppm need many minutes to stand out of the bound.
  */
 data class ProbeStats(
     val elapsedMicros: Long = 0,
@@ -41,6 +43,7 @@ data class ProbeStats(
     val offsetMicros: Long? = null,
     val offsetBoundMicros: Long? = null,
     val driftPpm: Double? = null,
+    val driftBoundPpm: Double? = null,
     val peerVersion: Int? = null,
     val incompatiblePeer: Boolean = false,
     val malformedFrames: Long = 0,
@@ -134,8 +137,14 @@ class LatencyProbe(
         val sorted = rtts.sorted()
         val best = OffsetEstimator.best(burst)
         val first = firstBurstBest
-        val driftPpm = if (first != null && best != null && best.t0 - first.t0 >= DRIFT_MIN_SPAN_MICROS) {
-            (best.offsetMicros - first.offsetMicros).toDouble() / (best.t0 - first.t0) * 1_000_000.0
+        val span = if (first != null && best != null) best.t0 - first.t0 else 0L
+        val driftPpm = if (span >= DRIFT_MIN_SPAN_MICROS) {
+            (best!!.offsetMicros - first!!.offsetMicros).toDouble() / span * 1_000_000.0
+        } else {
+            null
+        }
+        val driftBoundPpm = if (driftPpm != null) {
+            (first!!.rttMicros / 2 + best!!.rttMicros / 2).toDouble() / span * 1_000_000.0
         } else {
             null
         }
@@ -151,6 +160,7 @@ class LatencyProbe(
             offsetMicros = best?.offsetMicros,
             offsetBoundMicros = best?.let { it.rttMicros / 2 },
             driftPpm = driftPpm,
+            driftBoundPpm = driftBoundPpm,
         )
     }
 
@@ -158,6 +168,6 @@ class LatencyProbe(
         if (isEmpty()) null else this[((size - 1) * p).toInt()]
 
     private companion object {
-        const val DRIFT_MIN_SPAN_MICROS = 5_000_000L
+        const val DRIFT_MIN_SPAN_MICROS = 30_000_000L
     }
 }

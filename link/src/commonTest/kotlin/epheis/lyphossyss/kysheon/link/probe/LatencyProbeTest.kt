@@ -73,11 +73,18 @@ class LatencyProbeTest {
     @Test
     fun measuresClockDrift() = runTest {
         val (_, guestProbe) = startProbes(LinkConditions(latency = 20.milliseconds), hostDriftPpm = 50.0)
-        advanceTimeBy(30_000)
+        advanceTimeBy(20_000)
         runCurrent()
+        assertEquals(null, guestProbe.stats.value.driftPpm, "not reported before 30 s")
 
-        val drift = assertNotNull(guestProbe.stats.value.driftPpm)
+        advanceTimeBy(20_000)
+        runCurrent()
+        val stats = guestProbe.stats.value
+        val drift = assertNotNull(stats.driftPpm)
+        val bound = assertNotNull(stats.driftBoundPpm)
         assertTrue(abs(drift - 50.0) < 2.0, "drift $drift ppm")
+        // Worst case: two half-RTTs (20 ms each) over ~39 s, about 1 000 ppm. Honest, and very pessimistic here.
+        assertTrue(bound > 500.0 && abs(drift - 50.0) <= bound, "bound $bound ppm")
     }
 
     @Test

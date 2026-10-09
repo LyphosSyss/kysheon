@@ -42,11 +42,14 @@ class ArenaRenderer(private val side: Side) {
     private var lastHp = -1
     private var flashUntilNanos = 0L
 
-    fun DrawScope.drawArena(sim: HalfSimulation, alpha: Double, box: Letterbox, frameNanos: Long) {
+    /** [showProjectiles] is false once the round is over: the simulation is frozen, its projectiles would hang mid-air. */
+    fun DrawScope.drawArena(sim: HalfSimulation, alpha: Double, box: Letterbox, frameNanos: Long, showProjectiles: Boolean) {
         drawRect(KColors.surface, Offset(box.left, box.top), Size(box.scale, box.length(sim.aspect)))
         drawSeam(box, sim.aspect)
-        drawProjectiles(sim.localProjectiles, alpha, box, ownColor)
-        drawProjectiles(sim.incomingProjectiles, alpha, box, opponentColor)
+        if (showProjectiles) {
+            drawProjectiles(sim.localProjectiles, alpha, box, ownColor)
+            drawProjectiles(sim.incomingProjectiles, alpha, box, opponentColor)
+        }
         drawFighter(sim, alpha, box, frameNanos)
         drawHp(sim, box)
     }
