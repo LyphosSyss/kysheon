@@ -1,0 +1,28 @@
+# Gradle / Kotlin
+.gradle/
+build/
+.kotlin/
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Android
+captures/
+.cxx/
+.externalNativeBuild/
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
+iosApp/Configuration/Local.xcconfig
+
+# Secrets: never commit signing material
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+keystore.properties
