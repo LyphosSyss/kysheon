@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bluetooth LE permissions of the :link library, merged into the app manifest.
+  Android 12+ (API 31): runtime permissions BLUETOOTH_SCAN, BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE.
+  Scan results are never used to derive location, hence neverForLocation (the app must not need
+  ACCESS_FINE_LOCATION on 31+). Android 8 to 11 (API 26-30): legacy install-time permissions and
+  ACCESS_FINE_LOCATION, which the platform requires for BLE scanning there.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="30" />
+
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
+</manifest>
