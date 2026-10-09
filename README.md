@@ -25,7 +25,8 @@ appareils et un **protocole binaire** conçu et testé.
 | Sonde de latence (écran de mesure) | fait | tests en temps virtuel ; mesures réelles ci-dessous |
 | Écrans de jeu, overlay de debug | fait | partie complète et revanche jouées sur les deux Android ; build Xcode + simulateur iOS (accueil) |
 | Android ↔ iOS | **non vérifié** | demande l’iPhone 16e, voir [`docs/manual-tests/ios-ble.md`](docs/manual-tests/ios-ble.md) |
-| Coupure Bluetooth en pleine partie, hors de portée, arrière-plan | **non vérifié** | voir [`docs/MANUAL-TESTS.md`](docs/MANUAL-TESTS.md) |
+| Coupure Bluetooth en pleine partie (côté invité) | fait | **vérifié sur téléphones** : retour à l’accueil avec message des deux côtés, aucun crash |
+| Coupure côté hôte, hors de portée, arrière-plan | **non vérifié** | voir [`docs/MANUAL-TESTS.md`](docs/MANUAL-TESTS.md) |
 
 ## Principe
 

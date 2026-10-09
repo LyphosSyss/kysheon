@@ -151,7 +151,7 @@ L’erreur 133 (`GATT_ERROR`) ne se provoque pas à la demande. Méthodes possib
 | 2. MTU observée | 517 | 517 | demandée : 247 |
 | 2. Trames perdues / profondeur max de file | 0 ping perdu | 0 ping perdu | profondeur non relevée |
 | 3. B hôte, A invité | OK | OK | 0 ping perdu, RTT médian ≈ 34 ms |
-| 4. Bluetooth coupé (côté hôte / côté invité) | non mesuré | non mesuré | codes : |
+| 4. Bluetooth coupé (côté hôte / côté invité) | hôte : retour accueil « L’autre téléphone s’est déconnecté. » en 1,9 s | invité (coupé) : retour accueil « Le Bluetooth a été désactivé. » immédiat | coupure côté invité seulement ; aucun crash (logcat) ; coupure côté hôte non testée |
 | 5. Hors de portée (délai, code) | non mesuré | non mesuré | |
 | 6. Arrière-plan / écran verrouillé | non mesuré | non mesuré | |
 | 7. 10 cycles connexion / fermeture | non mesuré | non mesuré | |
@@ -164,3 +164,6 @@ L’erreur 133 (`GATT_ERROR`) ne se provoque pas à la demande. Méthodes possib
   hôte qui retient un appareil parasite. Deux bugs corrigés, voir [KYS-0024](decisions/0024-android-ble-device-findings.md).
 - **2026-10-09, essai 2** : sonde dans les deux sens, 0 perte (mesures dans le README) ; partie complète jouée,
   « Victoire » sur le Nothing et « Défaite » sur le CMF, PV cohérents des deux côtés ; revanche OK.
+- **2026-10-09, essai 3** : Bluetooth coupé sur le CMF (invité) en pleine partie : `Lost(BluetoothOff)` immédiat sur
+  le CMF, `Lost(PeerDisconnected)` en 1,9 s sur le Nothing (signalé par Android, avant le heartbeat) ; retour à
+  l’accueil avec message des deux côtés, aucun crash.
