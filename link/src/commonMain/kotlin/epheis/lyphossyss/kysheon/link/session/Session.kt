@@ -136,6 +136,7 @@ class Session(
     private var peerReady = false
     private var lastHeardMicros = 0L
     private var heartbeatSeq = 0
+    private var lastHelloSentMicros = Long.MIN_VALUE / 2
     private var scope: CoroutineScope? = null
     private var countdownJob: Job? = null
 
@@ -148,7 +149,7 @@ class Session(
             val lost = link.state.first { it is LinkState.Lost } as LinkState.Lost
             abort(AbortReason.LinkLost(lost.reason))
         }
-        sendMessage(Message.Hello(PROTOCOL_VERSION, role, localAspectMilli))
+        sendHello()
         launch { heartbeatLoop() }
         launch { watchdogLoop() }
         if (role == Role.Guest) launch { syncLoop() }
@@ -209,10 +210,21 @@ class Session(
         }
     }
 
+    /**
+     * A transport may drop frames that arrive while it is still finishing its own setup (e.g. a notification
+     * received before the CCCD write is acknowledged), so HELLO can be lost. Recovery: a side still handshaking
+     * resends HELLO every heartbeat; a side that already got through answers a repeated HELLO with its own, at most
+     * once per heartbeat interval, which cannot loop.
+     */
     private suspend fun onHello(hello: Message.Hello) {
         if (hello.role != role.opposite) {
             abort(AbortReason.RoleConflict)
             return
+        }
+        if (mutableState.value != SessionState.Handshaking &&
+            localClock.nowMicros() - lastHelloSentMicros >= config.heartbeatInterval.inWholeMicroseconds
+        ) {
+            sendHello()
         }
         mutableAspect.value = minOf(localAspectMilli, hello.aspectMilli)
         if (mutableState.value == SessionState.Handshaking) {
@@ -303,6 +315,7 @@ class Session(
             delay(config.heartbeatInterval)
             sendMessage(Message.Heartbeat(heartbeatSeq))
             heartbeatSeq = (heartbeatSeq + 1) % 256
+            if (mutableState.value == SessionState.Handshaking) sendHello()
         }
     }
 
@@ -363,6 +376,11 @@ class Session(
     private fun jitterOf(samples: List<SyncSample>): Long? =
         if (samples.size < 2) null
         else samples.zipWithNext { a, b -> abs(b.rttMicros - a.rttMicros) }.sum() / (samples.size - 1)
+
+    private suspend fun sendHello() {
+        lastHelloSentMicros = localClock.nowMicros()
+        sendMessage(Message.Hello(PROTOCOL_VERSION, role, localAspectMilli))
+    }
 
     private suspend fun sendMessage(message: Message) {
         link.send(MessageCodec.encode(message))

@@ -1,5 +1,6 @@
 package epheis.lyphossyss.kysheon.link.session
 
+import epheis.lyphossyss.kysheon.link.Link
 import epheis.lyphossyss.kysheon.link.LostReason
 import epheis.lyphossyss.kysheon.link.memory.LinkConditions
 import epheis.lyphossyss.kysheon.link.memory.MemoryLinkPair
@@ -9,6 +10,7 @@ import epheis.lyphossyss.kysheon.link.protocol.MessageCodec
 import epheis.lyphossyss.kysheon.link.protocol.Role
 import epheis.lyphossyss.kysheon.link.time.MonotonicClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -208,6 +210,55 @@ class SessionTest {
         advance(5_000)
         assertEquals(SessionState.Running, rig.host.state.value)
         assertEquals(SessionState.Running, rig.guest.state.value)
+    }
+
+    @Test
+    fun aLostHelloIsRecovered() = runTest {
+        val pair = MemoryLinkPair(backgroundScope, MonotonicClock { trueMicros() }, LinkConditions(latency = 30.milliseconds))
+        pair.host.host()
+        assertTrue(pair.guest.join())
+        val host = Session(pair.host, MonotonicClock { trueMicros() }, Role.Host, 2000)
+        val guest = Session(pair.guest, MonotonicClock { trueMicros() }, Role.Guest, 2000)
+        backgroundScope.launch { host.run() }
+        advance(100)
+        // The guest transport drops what arrived before the guest was ready: the host HELLO is lost.
+        assertEquals(MessageCodec.CODE_HELLO, pair.guest.incoming.first()[0].toInt())
+
+        backgroundScope.launch { guest.run() }
+        advance(3_000)
+        assertEquals(SessionState.Lobby, host.state.value)
+        assertEquals(SessionState.Lobby, guest.state.value)
+    }
+
+    /** Counts the HELLO frames a side sends. */
+    private class HelloCounter(private val inner: Link) : Link by inner {
+        var hellos = 0
+        override suspend fun send(frame: ByteArray) {
+            if (frame.firstOrNull()?.toInt() == MessageCodec.CODE_HELLO) hellos++
+            inner.send(frame)
+        }
+    }
+
+    @Test
+    fun repeatedHellosDoNotPingPongForever() = runTest {
+        val pair = MemoryLinkPair(backgroundScope, MonotonicClock { trueMicros() }, LinkConditions(latency = 30.milliseconds))
+        pair.host.host()
+        assertTrue(pair.guest.join())
+        val hostLink = HelloCounter(pair.host)
+        val guestLink = HelloCounter(pair.guest)
+        val host = Session(hostLink, MonotonicClock { trueMicros() }, Role.Host, 2000)
+        val guest = Session(guestLink, MonotonicClock { trueMicros() }, Role.Guest, 2000)
+        backgroundScope.launch { host.run() }
+        backgroundScope.launch { guest.run() }
+        advance(2_000)
+        // A stray repeated HELLO (as if the guest were still handshaking) gets one answer, then silence.
+        pair.guest.send(MessageCodec.encode(Message.Hello(1, Role.Guest, 2000)))
+        advance(30_000)
+
+        assertEquals(SessionState.Lobby, host.state.value)
+        assertEquals(SessionState.Lobby, guest.state.value)
+        assertTrue(hostLink.hellos <= 3, "host sent ${hostLink.hellos} HELLO")
+        assertTrue(guestLink.hellos <= 3, "guest sent ${guestLink.hellos} HELLO")
     }
 
     @Test
