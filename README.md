@@ -1,5 +1,7 @@
 # Kysheon
 
+[![CI](https://github.com/LyphosSyss/kysheon/actions/workflows/ci.yml/badge.svg)](https://github.com/LyphosSyss/kysheon/actions/workflows/ci.yml)
+
 Deux téléphones posés côte à côte forment une seule arène. Chaque écran est une moitié. Des formes géométriques
 s’envoient des projectiles qui traversent la frontière d’un écran à l’autre. Les deux appareils sont reliés en
 **Bluetooth Low Energy (GATT)**, sans internet.
@@ -134,8 +136,8 @@ Prérequis : JDK 21, Android SDK (plateforme 37), Xcode 26 pour iOS.
 | JVM tests and Android build | `ubuntu-latest` | validation du wrapper Gradle, `jvmTest` (game-core, link, match), APK de debug, lint Android |
 | Kotlin/Native tests and iOS build | `macos-26` (Xcode 26.6) | mêmes tests sur le simulateur iOS, framework iOS appareil, build Xcode du simulateur sans signature |
 
-Les actions tierces sont épinglées par SHA de commit. Le workflow n’a **pas encore tourné sur GitHub** (dépôt non
-publié) ; ses commandes ont été exécutées en local le 2026-10-09 avec succès (112 tests JVM, 112 tests Kotlin/Native).
+Les actions tierces sont épinglées par SHA de commit. Premier passage sur GitHub le 2026-10-09 : les deux jobs verts
+(Linux en 4 min environ, macOS en 10 min environ).
 
 ## Dépendances
 
