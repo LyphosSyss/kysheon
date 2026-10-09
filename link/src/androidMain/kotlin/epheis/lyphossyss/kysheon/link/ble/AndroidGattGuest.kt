@@ -3,6 +3,7 @@ package epheis.lyphossyss.kysheon.link.ble
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
+import android.util.Log
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
@@ -43,6 +44,10 @@ internal class GuestSession(link: AndroidBleLink) : BleSession(link, "guest") {
     private enum class Phase { Scanning, Connecting, RequestingMtu, Discovering, Subscribing, Ready }
 
     private var phase = Phase.Scanning
+        set(value) {
+            if (field != value) Log.d(AndroidBleLink.TAG, "guest phase $field -> $value")
+            field = value
+        }
     private var scanner: BluetoothLeScanner? = null
     private var scanning = false
     private val seen = HashMap<String, Sighting>()
@@ -178,7 +183,8 @@ internal class GuestSession(link: AndroidBleLink) : BleSession(link, "guest") {
         attemptFailed(status)
     }
 
-    private fun onMtuChanged(client: BluetoothGatt, mtu: Int, status: Int) {
+    private fun handleMtuChanged(client: BluetoothGatt, mtu: Int, status: Int) {
+        Log.d(AndroidBleLink.TAG, "guest mtu=$mtu status=$status phase=$phase same=${client === gatt}")
         if (client !== gatt) return
         if (status == BluetoothGatt.GATT_SUCCESS) link.recordMtu(mtu) else link.recordPlatformCode(status)
         // A failed MTU exchange is not fatal: every frame fits the default MTU (KYS-0002).
@@ -190,7 +196,7 @@ internal class GuestSession(link: AndroidBleLink) : BleSession(link, "guest") {
         if (!client.discoverServices()) attemptFailed(null)
     }
 
-    private fun onServicesDiscovered(client: BluetoothGatt, status: Int) {
+    private fun handleServicesDiscovered(client: BluetoothGatt, status: Int) {
         if (client !== gatt || phase != Phase.Discovering) return
         if (status != BluetoothGatt.GATT_SUCCESS) return attemptFailed(status)
         val service = client.getService(UUID.fromString(BleUuids.SERVICE))
@@ -219,7 +225,7 @@ internal class GuestSession(link: AndroidBleLink) : BleSession(link, "guest") {
         }
     }
 
-    private fun onDescriptorWrite(client: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+    private fun handleDescriptorWrite(client: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
         if (client !== gatt || phase != Phase.Subscribing) return
         if (descriptor.uuid != UUID.fromString(BleUuids.CCCD)) return
         if (status != BluetoothGatt.GATT_SUCCESS) return attemptFailed(status)
@@ -259,21 +265,23 @@ internal class GuestSession(link: AndroidBleLink) : BleSession(link, "guest") {
         if (characteristic.uuid == UUID.fromString(BleUuids.TX)) link.deliver(this, value)
     }
 
+    // The handlers above are named handle* on purpose: inside this object, a call like `onMtuChanged(gatt, mtu, status)`
+    // resolves to the override itself, which re-posted itself forever (found on a CMF Phone 1, see KYS-0024).
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             link.post(this@GuestSession) { onConnectionChange(gatt, status, newState) }
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-            link.post(this@GuestSession) { onMtuChanged(gatt, mtu, status) }
+            link.post(this@GuestSession) { handleMtuChanged(gatt, mtu, status) }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            link.post(this@GuestSession) { onServicesDiscovered(gatt, status) }
+            link.post(this@GuestSession) { handleServicesDiscovered(gatt, status) }
         }
 
         override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
-            link.post(this@GuestSession) { onDescriptorWrite(gatt, descriptor, status) }
+            link.post(this@GuestSession) { handleDescriptorWrite(gatt, descriptor, status) }
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {

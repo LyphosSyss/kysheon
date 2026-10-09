@@ -3,6 +3,7 @@ package epheis.lyphossyss.kysheon.link.ble
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
+import android.util.Log
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattServer
@@ -19,17 +20,16 @@ import android.os.Build
 import android.os.ParcelUuid
 import epheis.lyphossyss.kysheon.link.LinkState
 import epheis.lyphossyss.kysheon.link.LostReason
-import kotlinx.coroutines.Job
 import java.util.UUID
 
 /**
  * Host role: peripheral with a GATT server and a legacy connectable advertisement.
  *
  * Service [BleUuids.SERVICE] holds RX (write without response, guest → host) and TX (notify, host → guest, with its
- * CCCD 0x2902, which a GATT server must declare and answer itself). One peer only: advertising stops at the first
- * connection, and the session is Connected once that central has enabled TX notifications, so frames can flow both
- * ways. A connected central that does not subscribe within [AndroidBleTimings.hostPeerSetupTimeout] (another app's
- * device, a watch reconnecting…) is ignored and advertising resumes.
+ * CCCD 0x2902, which a GATT server must declare and answer itself). One peer only: the peer is the first central
+ * that enables TX notifications; advertising stops then and the session is Connected, so frames can flow both ways.
+ * A mere connection proves nothing: a GATT server is told about every LE link of the phone (earbuds, a watch…), and
+ * on a Nothing Phone (1) such a device was reported before the guest even connected (KYS-0024).
  *
  * Connection priority cannot be requested from the peripheral side on Android (`requestConnectionPriority` exists on
  * [BluetoothGatt] only): the guest requests CONNECTION_PRIORITY_HIGH.
@@ -48,14 +48,14 @@ internal class HostSession(link: AndroidBleLink) : BleSession(link, "host") {
     private var tx: BluetoothGattCharacteristic? = null
 
     /** Connected central that has not enabled notifications yet. */
-    private var candidate: BluetoothDevice? = null
-    private var candidateWatchdog: Job? = null
+    /** ATT MTU per connected device, recorded before we know which one will subscribe. */
+    private val mtus = HashMap<String, Int>()
 
     /** The guest, once it has enabled notifications. Read by onNotificationSent on a binder thread. */
     @Volatile
     private var peer: BluetoothDevice? = null
 
-    override fun peerDevice(): BluetoothDevice? = peer ?: candidate
+    override fun peerDevice(): BluetoothDevice? = peer
 
     override fun start() {
         val adapter = requireReady(AndroidBluetooth.hostPermissions())
@@ -126,7 +126,7 @@ internal class HostSession(link: AndroidBleLink) : BleSession(link, "host") {
     private val advertiseCallback = object : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
             link.post(this@HostSession) {
-                if (peer == null && candidate == null) link.setState(this@HostSession, LinkState.Advertising)
+                if (peer == null) link.setState(this@HostSession, LinkState.Advertising)
                 started.complete(Unit)
             }
         }
@@ -145,38 +145,17 @@ internal class HostSession(link: AndroidBleLink) : BleSession(link, "host") {
 
     // ---- GATT server events, on the serial dispatcher ----
 
-    private fun onServiceAdded(status: Int) {
+    private fun handleServiceAdded(status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) throw LinkFailure(LostReason.ConnectionFailed, status)
         startAdvertising()
     }
 
     private fun onConnectionChange(device: BluetoothDevice, status: Int, newState: Int) {
-        link.recordPlatformCode(status.takeIf { it != BluetoothGatt.GATT_SUCCESS })
-        when (newState) {
-            BluetoothProfile.STATE_CONNECTED -> {
-                if (peer != null || candidate != null) return // Single peer: anybody else is ignored.
-                candidate = device
-                stopAdvertising()
-                link.setState(this, LinkState.Connecting)
-                link.describe(this)
-                candidateWatchdog = link.after(this, link.timings.hostPeerSetupTimeout) {
-                    if (peer == null && candidate == device) forgetCandidate()
-                }
-            }
-            BluetoothProfile.STATE_DISCONNECTED -> when (device) {
-                peer -> throw LinkFailure(LostReason.PeerDisconnected, status)
-                candidate -> forgetCandidate()
-            }
+        Log.d(AndroidBleLink.TAG, "host connection state=$newState status=$status isPeer=${device == peer}")
+        if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            mtus.remove(device.address)
+            if (device == peer) throw LinkFailure(LostReason.PeerDisconnected, status)
         }
-    }
-
-    private fun forgetCandidate() {
-        candidate = null
-        candidateWatchdog?.cancel()
-        candidateWatchdog = null
-        link.setState(this, LinkState.Advertising)
-        link.describe(this)
-        startAdvertising()
     }
 
     private fun onCccdWrite(device: BluetoothDevice, requestId: Int, responseNeeded: Boolean, offset: Int, value: ByteArray?) {
@@ -189,10 +168,9 @@ internal class HostSession(link: AndroidBleLink) : BleSession(link, "host") {
             value == null || value.size != 2 -> return respond(BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH)
         }
         val enable = value.contentEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+        Log.d(AndroidBleLink.TAG, "host CCCD write enable=$enable peer=${peer != null} isPeer=${device == peer}")
         val currentPeer = peer
         when {
-            currentPeer == null && candidate != null && device != candidate ->
-                respond(BluetoothGatt.GATT_WRITE_NOT_PERMITTED)
             currentPeer == null -> {
                 // Answer first: the guest becomes Connected on this response, and only then may notifications flow.
                 respond(BluetoothGatt.GATT_SUCCESS)
@@ -208,9 +186,7 @@ internal class HostSession(link: AndroidBleLink) : BleSession(link, "host") {
 
     private fun becomeConnected(device: BluetoothDevice) {
         peer = device
-        candidate = null
-        candidateWatchdog?.cancel()
-        candidateWatchdog = null
+        mtus[device.address]?.let(link::recordMtu)
         stopAdvertising()
         sender = link.newSender(this, ::notifyPeer)
         link.setConnected(this)
@@ -242,7 +218,7 @@ internal class HostSession(link: AndroidBleLink) : BleSession(link, "host") {
 
     private val serverCallback = object : BluetoothGattServerCallback() {
         override fun onServiceAdded(status: Int, service: BluetoothGattService?) {
-            link.post(this@HostSession) { onServiceAdded(status) }
+            link.post(this@HostSession) { handleServiceAdded(status) }
         }
 
         override fun onConnectionStateChange(device: BluetoothDevice?, status: Int, newState: Int) {
@@ -252,7 +228,10 @@ internal class HostSession(link: AndroidBleLink) : BleSession(link, "host") {
 
         override fun onMtuChanged(device: BluetoothDevice?, mtu: Int) {
             device ?: return
-            link.post(this@HostSession) { if (device == peer || device == candidate) link.recordMtu(mtu) }
+            link.post(this@HostSession) {
+                mtus[device.address] = mtu
+                if (device == peer) link.recordMtu(mtu)
+            }
         }
 
         override fun onCharacteristicWriteRequest(

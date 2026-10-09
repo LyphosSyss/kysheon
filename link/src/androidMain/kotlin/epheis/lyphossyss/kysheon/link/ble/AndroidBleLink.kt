@@ -39,8 +39,6 @@ import kotlin.time.Duration.Companion.seconds
  * Timeouts and limits of [AndroidBleLink]. Defaults are meant for two phones lying side by side.
  *
  * @property advertiseStartTimeout `host()` gives up if advertising has not started by then.
- * @property hostPeerSetupTimeout a central that connected to the host must enable notifications within this delay,
- *   otherwise the host forgets it and advertises again.
  * @property scanTimeout `join()` reports `Lost(PeerNotFound)` if no host was seen by then.
  * @property scanCollectWindow after the first scan result, results are collected this long and the strongest RSSI
  *   wins (the intended peer lies right next to this phone).
@@ -53,7 +51,6 @@ import kotlin.time.Duration.Companion.seconds
  */
 data class AndroidBleTimings(
     val advertiseStartTimeout: Duration = 5.seconds,
-    val hostPeerSetupTimeout: Duration = 10.seconds,
     val scanTimeout: Duration = 15.seconds,
     val scanCollectWindow: Duration = 1500.milliseconds,
     val connectTimeout: Duration = 10.seconds,
@@ -112,6 +109,7 @@ class AndroidBleLink(
         worker.launch {
             for (event in events) {
                 try {
+                    if (Log.isLoggable(TAG, Log.VERBOSE)) Log.v(TAG, "event ${event.javaClass.name}")
                     event()
                 } catch (cancellation: CancellationException) {
                     throw cancellation
@@ -167,6 +165,7 @@ class AndroidBleLink(
 
     /** Posts [block] to the event loop; it runs only if [session] is still the active one. Thread-safe. */
     internal fun post(session: BleSession, block: () -> Unit) {
+        if (Log.isLoggable(TAG, Log.VERBOSE)) Log.v(TAG, "post ${block.javaClass.name}")
         events.trySend { if (current === session) runGuarded(session, block) }
     }
 
