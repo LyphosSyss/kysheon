@@ -49,8 +49,11 @@ sealed interface SessionState {
     /** No frame for [SessionConfig.silenceBeforePause]. [from] is the state to come back to. */
     data class Paused(val from: SessionState) : SessionState
 
-    /** The round is over. Not terminal: READY from both sides starts a rematch. */
-    data class Ended(val winner: Role, val reason: EndReason) : SessionState
+    /**
+     * The round is over; [winner] is null for a draw (both fighters fell within the network delay).
+     * Not terminal: READY from both sides starts a rematch.
+     */
+    data class Ended(val winner: Role?, val reason: EndReason) : SessionState
 
     /** Terminal. The owner closes the link. */
     data class Aborted(val reason: AbortReason) : SessionState
@@ -258,12 +261,21 @@ class Session(
         }
     }
 
+    /**
+     * Each half only knows about its own fighter, so both may declare their own defeat while the other END is in
+     * flight. Two opposite claims mean both fighters fell: a draw, reached identically on both sides.
+     */
     private fun enterEnded(winner: Role, reason: EndReason) {
-        if (mutableState.value is SessionState.Aborted) return
+        val current = mutableState.value
+        if (current is SessionState.Aborted) return
         countdownJob?.cancel()
         localReady = false
         peerReady = false
-        mutableState.value = SessionState.Ended(winner, reason)
+        mutableState.value = if (current is SessionState.Ended && current.winner != winner) {
+            SessionState.Ended(winner = null, reason = EndReason.KnockOut)
+        } else {
+            SessionState.Ended(winner, reason)
+        }
     }
 
     private suspend fun recover(paused: SessionState.Paused) {
