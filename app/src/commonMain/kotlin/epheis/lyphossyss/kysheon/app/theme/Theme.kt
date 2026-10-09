@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -71,7 +72,12 @@ fun KButton(
     ) {
         KText(
             text = label,
-            color = if (enabled) KColors.background else KColors.muted,
+            // Dark text on light accents, light text on dark ones.
+            color = when {
+                !enabled -> KColors.muted
+                accent.luminance() > 0.25f -> KColors.background
+                else -> KColors.text
+            },
             weight = FontWeight.SemiBold,
         )
     }

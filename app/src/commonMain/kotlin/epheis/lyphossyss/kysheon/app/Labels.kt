@@ -2,6 +2,9 @@ package epheis.lyphossyss.kysheon.app
 
 import androidx.compose.runtime.Composable
 import epheis.lyphossyss.kysheon.app.resources.Res
+import epheis.lyphossyss.kysheon.app.resources.abort_incompatible
+import epheis.lyphossyss.kysheon.app.resources.abort_peer_silent
+import epheis.lyphossyss.kysheon.app.resources.abort_role_conflict
 import epheis.lyphossyss.kysheon.app.resources.lost_bluetooth_off
 import epheis.lyphossyss.kysheon.app.resources.lost_connection_failed
 import epheis.lyphossyss.kysheon.app.resources.lost_not_found
@@ -19,6 +22,7 @@ import epheis.lyphossyss.kysheon.app.resources.state_scanning
 import epheis.lyphossyss.kysheon.link.LinkState
 import epheis.lyphossyss.kysheon.link.LostReason
 import epheis.lyphossyss.kysheon.link.protocol.Role
+import epheis.lyphossyss.kysheon.link.session.AbortReason
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -46,6 +50,17 @@ fun lostMessage(lost: LinkState.Lost): String = stringResource(
         LostReason.PeerDisconnected -> Res.string.lost_peer
     },
 )
+
+@Composable
+fun noticeMessage(notice: Notice): String = when (notice) {
+    is Notice.Lost -> lostMessage(notice.state)
+    is Notice.Aborted -> when (val reason = notice.reason) {
+        is AbortReason.IncompatibleVersion -> stringResource(Res.string.abort_incompatible, reason.remoteVersion.toString())
+        AbortReason.RoleConflict -> stringResource(Res.string.abort_role_conflict)
+        AbortReason.PeerSilent -> stringResource(Res.string.abort_peer_silent)
+        is AbortReason.LinkLost -> lostMessage(LinkState.Lost(reason.reason))
+    }
+}
 
 @Composable
 fun roleLabel(role: Role): String = stringResource(if (role == Role.Host) Res.string.role_host else Res.string.role_guest)

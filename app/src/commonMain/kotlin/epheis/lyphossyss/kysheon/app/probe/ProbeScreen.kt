@@ -66,7 +66,7 @@ fun ProbeScreen(screen: Screen.Probe, onFinish: () -> Unit) {
     fun ms(micros: Long?) = micros?.let { formatMillis(it, sep) } ?: pending
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         KText(stringResource(Res.string.probe_title), size = 28.sp, weight = FontWeight.Bold)

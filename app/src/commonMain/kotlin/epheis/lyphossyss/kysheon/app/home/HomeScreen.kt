@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -20,8 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import epheis.lyphossyss.kysheon.app.Mode
 import epheis.lyphossyss.kysheon.app.Screen
-import epheis.lyphossyss.kysheon.app.lostMessage
+import epheis.lyphossyss.kysheon.app.noticeMessage
 import epheis.lyphossyss.kysheon.app.platform.BluetoothAccess
 import epheis.lyphossyss.kysheon.app.resources.Res
 import epheis.lyphossyss.kysheon.app.resources.action_enable
@@ -37,6 +39,9 @@ import epheis.lyphossyss.kysheon.app.resources.home_join
 import epheis.lyphossyss.kysheon.app.resources.home_probe_hint
 import epheis.lyphossyss.kysheon.app.resources.home_tagline
 import epheis.lyphossyss.kysheon.app.resources.lost_code
+import epheis.lyphossyss.kysheon.app.resources.mode_game
+import epheis.lyphossyss.kysheon.app.resources.mode_probe
+import epheis.lyphossyss.kysheon.app.Notice
 import epheis.lyphossyss.kysheon.app.theme.KButton
 import epheis.lyphossyss.kysheon.app.theme.KColors
 import epheis.lyphossyss.kysheon.app.theme.KText
@@ -48,6 +53,8 @@ fun HomeScreen(
     screen: Screen.Home,
     bluetooth: BluetoothAccess,
     platformSupported: Boolean,
+    mode: Mode,
+    onMode: (Mode) -> Unit,
     onHost: () -> Unit,
     onJoin: () -> Unit,
 ) {
@@ -55,7 +62,7 @@ fun HomeScreen(
     val ready = platformSupported && availability == BluetoothAvailability.Ready
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -86,13 +93,25 @@ fun HomeScreen(
         }
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            for (option in Mode.entries) {
+                val selected = option == mode
+                KButton(
+                    label = stringResource(if (option == Mode.Game) Res.string.mode_game else Res.string.mode_probe),
+                    onClick = { onMode(option) },
+                    modifier = Modifier.weight(1f),
+                    accent = if (selected) KColors.text else KColors.surfaceHigh,
+                )
+            }
+        }
+
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             KButton(stringResource(Res.string.home_host), onHost, Modifier.weight(1f), KColors.host, enabled = ready)
             KButton(stringResource(Res.string.home_join), onJoin, Modifier.weight(1f), KColors.guest, enabled = ready)
         }
 
-        screen.notice?.let { lost ->
-            KText(lostMessage(lost), color = KColors.danger)
-            lost.platformCode?.let { code ->
+        screen.notice?.let { notice ->
+            KText(noticeMessage(notice), color = KColors.danger)
+            (notice as? Notice.Lost)?.state?.platformCode?.let { code ->
                 KText(stringResource(Res.string.lost_code, code.toString()), color = KColors.muted, size = 12.sp)
             }
         }
