@@ -195,4 +195,9 @@ Résultat : non mesuré.
   - **iPhone invité** d’un Nothing Phone (1) hôte : connexion OK, sonde 67 s, RTT médian 54,9 ms, 0 perte, charge utile 512 ;
   - **iPhone hôte** (peripheral), Nothing invité : connexion OK, sonde 92 s côté Nothing, RTT médian 32,4 ms, 0 perte.
     Le repli « iPhone invité uniquement » (KYS-0031) n’est pas nécessaire.
-  - Non testé : partie de jeu, coupure Bluetooth côté iPhone, arrière-plan, Centre de contrôle.
+  - **Partie** iPhone hôte, Nothing invité : jeu fluide (Nothing à 120 Hz : image p50 8,3 ms, 0 pas abandonné),
+    handoffs dans les deux sens, touches et PV cohérents ; décalage d’horloge lissé sans saut (écart cible 4 ms).
+  - **Bluetooth coupé dans Réglages sur l’iPhone** en pleine partie : iPhone → accueil « Le Bluetooth a été
+    désactivé. » ; Nothing → accueil « L’autre téléphone ne répond plus. » (détecté par le heartbeat de session,
+    Android n’a signalé aucune déconnexion) ; aucun crash.
+  - Non testé : arrière-plan, Centre de contrôle, CMF Phone 1 ↔ iPhone.
