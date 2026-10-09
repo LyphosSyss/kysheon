@@ -39,6 +39,9 @@ Cibles : **Android et iOS uniquement**. La cible `jvm` n’existe que pour exéc
 ./gradlew :app:linkDebugFrameworkIosArm64           # framework iOS appareil
 ```
 
+La CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) exécute exactement ces commandes, plus le lint Android
+et un build Xcode du simulateur. Avant de proposer un commit, lancer au minimum `./gradlew jvmTest`.
+
 ## Règles non négociables
 
 1. **Aucune API de plateforme dans `commonMain`** : `expect`/`actual` ou interface injectée.

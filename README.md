@@ -117,6 +117,18 @@ Prérequis : JDK 21, Android SDK (plateforme 37), Xcode 26 pour iOS.
 ./gradlew :app:linkDebugFrameworkIosArm64           # framework iOS pour appareil
 ```
 
+## Intégration continue
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml), à chaque push sur `main` et à chaque pull request, sans aucun secret :
+
+| Job | Runner | Étapes |
+|---|---|---|
+| JVM tests and Android build | `ubuntu-latest` | validation du wrapper Gradle, `jvmTest` (game-core, link, match), APK de debug, lint Android |
+| Kotlin/Native tests and iOS build | `macos-26` (Xcode 26.6) | mêmes tests sur le simulateur iOS, framework iOS appareil, build Xcode du simulateur sans signature |
+
+Les actions tierces sont épinglées par SHA de commit. Le workflow n’a **pas encore tourné sur GitHub** (dépôt non
+publié) ; ses commandes ont été exécutées en local le 2026-10-09 avec succès (112 tests JVM, 112 tests Kotlin/Native).
+
 ## Dépendances
 
 | Dépendance | Version | Pourquoi |
