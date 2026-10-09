@@ -242,7 +242,7 @@ class AndroidBleLink(
             fail(session, failure.reason, failure.code)
         } catch (_: SecurityException) {
             fail(session, LostReason.PermissionDenied)
-        } catch (failure: Exception) {
+        } catch (failure: Throwable) {
             // IllegalStateException when the adapter is off, DeadObjectException wrappers, vendor quirks…
             Log.w(TAG, "Bluetooth call failed", failure)
             fail(session, LostReason.ConnectionFailed)
@@ -369,7 +369,7 @@ internal abstract class BleSession(val link: AndroidBleLink, val role: String) {
         scope.coroutineContext[Job]?.cancel()
         try {
             releaseRadio()
-        } catch (failure: Exception) {
+        } catch (failure: Throwable) {
             Log.w(AndroidBleLink.TAG, "Failure while releasing $role resources", failure)
         }
         adapterReceiver.unregister()
