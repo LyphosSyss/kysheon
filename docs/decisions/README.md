@@ -37,3 +37,4 @@ Le corps cite les fiches liées avec des liens relatifs, par ex. `[KYS-0002](000
 | [KYS-0004](0004-toolchain-versions.md) | Versions de la chaîne d’outils, `compileSdk 37` | accepted |
 | [KYS-0005](0005-no-graphics-engine.md) | Pas de moteur graphique tiers, rendu maison | accepted |
 | [KYS-0006](0006-mobile-only.md) | Android et iOS uniquement | accepted |
+| [KYS-0010](0010-game-core-no-alloc-handoff.md) | Simulation sans allocation et entrée déterministe des projectiles | accepted |
