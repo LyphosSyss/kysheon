@@ -32,6 +32,9 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
             implementation(projects.match)
         }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
