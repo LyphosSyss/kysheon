@@ -211,6 +211,16 @@ class SessionTest {
     }
 
     @Test
+    fun readyBeforeTheHandshakeStillStartsTheGame() = runTest {
+        val rig = rig()
+        rig.host.ready()
+        rig.guest.ready()
+        advance(6_000)
+        assertEquals(SessionState.Running, rig.host.state.value)
+        assertEquals(SessionState.Running, rig.guest.state.value)
+    }
+
+    @Test
     fun readyDuringAGameMakesTheHostScheduleAResume() = runTest {
         val rig = rig()
         val hostHistory = history(rig.host)

@@ -209,13 +209,17 @@ class Session(
         }
     }
 
-    private fun onHello(hello: Message.Hello) {
+    private suspend fun onHello(hello: Message.Hello) {
         if (hello.role != role.opposite) {
             abort(AbortReason.RoleConflict)
             return
         }
         mutableAspect.value = minOf(localAspectMilli, hello.aspectMilli)
-        if (mutableState.value == SessionState.Handshaking) mutableState.value = SessionState.Lobby
+        if (mutableState.value == SessionState.Handshaking) {
+            mutableState.value = SessionState.Lobby
+            // READY may have crossed our HELLO: start now if both players were already ready.
+            maybeStart()
+        }
     }
 
     private suspend fun onPeerReady() {

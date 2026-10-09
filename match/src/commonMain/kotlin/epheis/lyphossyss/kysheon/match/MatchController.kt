@@ -56,6 +56,9 @@ class MatchController(
     /** Interpolation factor between the previous and the current simulated state, for the renderer. */
     val alpha: Double get() = loop.alpha
 
+    /** Whole steps dropped by the catch-up cap (render stalls), for the debug overlay. */
+    val droppedSteps: Long get() = loop.droppedSteps
+
     var counters: MatchCounters = MatchCounters()
         private set
 
