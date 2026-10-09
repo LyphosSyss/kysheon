@@ -109,6 +109,56 @@ class HalfSimulation(
         return true
     }
 
+    /**
+     * Enters a projectile coming from the other half (HANDOFF).
+     *
+     * It appears on our border at `y = yNormalized × aspect` (clamped between the walls), then is advanced by
+     * [elapsedMicros] clamped to [0, [Rules.maxCatchUpMicros]]: `elapsed / stepMicros` full steps, then one
+     * partial step for the remainder, each with the same swept collisions as [step]. The fighter is held still
+     * at its current position during that catch-up (its past positions are not kept). The projectile can
+     * therefore hit, or miss, right away: those events are appended to [events] immediately.
+     *
+     * [elapsedMicros] is the time between the exit instant on the peer and the current simulated instant of this
+     * half (the end of its last step). The result depends only on the arguments and the current state, never on
+     * how the caller batches frames afterwards.
+     *
+     * Returns false if refused: [vx] not heading into the half (or zero), non-finite values, or incoming pool full.
+     * Returns true otherwise, even if the projectile already hit or missed during the catch-up.
+     */
+    fun receiveProjectile(id: Int, yNormalized: Double, vx: Double, vy: Double, elapsedMicros: Long): Boolean {
+        require(id in 0..0xFFFF) { "projectile id out of u16: $id" }
+        if (!yNormalized.isFinite() || !vx.isFinite() || !vy.isFinite()) return false
+        if (vx * side.towardBorder >= 0.0) return false
+        val pool = incomingProjectiles
+        val slot = pool.freeSlot()
+        if (slot < 0) return false
+        pool.activate(slot, id, side.borderX, clamp(yNormalized * aspect, projectileMinY, projectileMaxY), vx, vy)
+
+        val elapsed = when {
+            elapsedMicros < 0L -> 0L
+            elapsedMicros > rules.maxCatchUpMicros -> rules.maxCatchUpMicros
+            else -> elapsedMicros
+        }
+        val fullSteps = elapsed / rules.stepMicros
+        val remainderMicros = elapsed - fullSteps * rules.stepMicros
+        val f = fighterY
+        var alive = true
+        var k = 0L
+        while (alive && k < fullSteps) {
+            alive = advance(pool, slot, incoming = true, duration = dt, f0 = f, f1 = f)
+            k++
+        }
+        if (alive && remainderMicros > 0L) {
+            val duration = remainderMicros.toDouble() / 1_000_000.0
+            alive = advance(pool, slot, incoming = true, duration = duration, f0 = f, f1 = f)
+        }
+        if (alive) {
+            pool.prevXs[slot] = pool.xs[slot]
+            pool.prevYs[slot] = pool.ys[slot]
+        }
+        return true
+    }
+
     /** The peer reported a HIT on one of our projectiles. Returns the new [opponentHp] (never below 0). */
     fun onOpponentHit(): Int {
         if (opponentHp > 0) opponentHp--
