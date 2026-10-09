@@ -1,0 +1,9 @@
+// Shared build settings. The signing team is personal: put it in Local.xcconfig (git-ignored), e.g.
+//   DEVELOPMENT_TEAM = ABCDE12345
+APP_NAME = Kysheon
+PRODUCT_BUNDLE_IDENTIFIER = epheis.lyphossyss.kysheon
+IPHONEOS_DEPLOYMENT_TARGET = 16.0
+CURRENT_PROJECT_VERSION = 1
+MARKETING_VERSION = 0.1.0
+
+#include? "Local.xcconfig"
