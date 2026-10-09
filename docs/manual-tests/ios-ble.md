@@ -187,3 +187,12 @@ Attendu : chaque étape repart d’`Idle`, aucune trame de la session précéden
 de diagnostic repartent de zéro.
 
 Résultat : non mesuré.
+
+## Journal des essais
+
+- **2026-10-09** (iPhone 16e, iOS 27.0, profil développeur personnel) :
+  - permission Bluetooth : demande système affichée au premier appui sur « Autoriser le Bluetooth », puis « Bluetooth prêt » ;
+  - **iPhone invité** d’un Nothing Phone (1) hôte : connexion OK, sonde 67 s, RTT médian 54,9 ms, 0 perte, charge utile 512 ;
+  - **iPhone hôte** (peripheral), Nothing invité : connexion OK, sonde 92 s côté Nothing, RTT médian 32,4 ms, 0 perte.
+    Le repli « iPhone invité uniquement » (KYS-0031) n’est pas nécessaire.
+  - Non testé : partie de jeu, coupure Bluetooth côté iPhone, arrière-plan, Centre de contrôle.

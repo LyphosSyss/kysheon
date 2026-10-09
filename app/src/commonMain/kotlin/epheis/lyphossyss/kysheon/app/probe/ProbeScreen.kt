@@ -100,7 +100,7 @@ fun ProbeScreen(screen: Screen.Probe, onFinish: () -> Unit) {
                 ),
             )
             Metric(stringResource(Res.string.probe_jitter), stats.jitterMicros?.let { stringResource(Res.string.value_ms, ms(it)) } ?: pending)
-            Metric(
+            StackedMetric(
                 stringResource(Res.string.probe_offset),
                 if (stats.offsetMicros == null) pending
                 else stringResource(Res.string.probe_offset_value, ms(stats.offsetMicros), ms(stats.offsetBoundMicros)),

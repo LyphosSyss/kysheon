@@ -21,10 +21,10 @@ appareils et un **protocole binaire** conçu et testé.
 | Simulation d’une moitié (pas fixe 60 Hz, collisions balayées, handoff) | fait | tests JVM + Kotlin/Native |
 | Partie complète entre deux appareils simulés (50 ms + 20 ms de gigue) | fait | `FullMatchTest` |
 | Lien BLE Android (host et guest) | fait | **vérifié sur téléphones** (Nothing Phone (1) ↔ CMF Phone 1, les deux sens), 2026-10-09 |
-| Lien BLE iOS (guest et host) | écrit | compilation uniquement, **non vérifié sur iPhone** |
+| Lien BLE iOS (guest et host) | fait | **vérifié sur iPhone 16e** (iOS 27.0) avec le Nothing Phone (1), les deux rôles, sonde uniquement |
 | Sonde de latence (écran de mesure) | fait | tests en temps virtuel ; mesures réelles ci-dessous |
 | Écrans de jeu, overlay de debug | fait | partie complète et revanche jouées sur les deux Android ; build Xcode + simulateur iOS (accueil) |
-| Android ↔ iOS | **non vérifié** | demande l’iPhone 16e, voir [`docs/manual-tests/ios-ble.md`](docs/manual-tests/ios-ble.md) |
+| Android ↔ iOS (sonde, les deux sens) | fait | **vérifié sur téléphones**, 0 perte ; partie de jeu Android ↔ iOS et coupure Bluetooth côté iPhone **non vérifiées** |
 | Coupure Bluetooth en pleine partie (côté invité) | fait | **vérifié sur téléphones** : retour à l’accueil avec message des deux côtés, aucun crash |
 | Coupure côté hôte, hors de portée, arrière-plan | **non vérifié** | voir [`docs/MANUAL-TESTS.md`](docs/MANUAL-TESTS.md) |
 
@@ -95,8 +95,16 @@ téléphones côte à côte. Le RTT est mesuré par chaque téléphone sur ses p
 | Nothing Phone (1) → CMF Phone 1 | guest (CMF) | 248 s | 21,5 ms | 41,5 ms | 60,0 ms | 115,1 ms | 10,4 ms | 0 | 517 |
 | CMF Phone 1 → Nothing Phone (1) | host (CMF) | 43 s | 20,4 ms | 33,5 ms | 49,7 ms | 61,9 ms | 9,9 ms | 0 | 517 |
 | CMF Phone 1 → Nothing Phone (1) | guest (Nothing) | 42 s | 19,3 ms | 34,5 ms | 44,7 ms | 57,9 ms | 6,7 ms | 0 | 517 |
-| Android → iPhone 16e | — | — | non mesuré | non mesuré | non mesuré | non mesuré | non mesuré | — | — |
-| iPhone 16e → Android | — | — | non mesuré | non mesuré | non mesuré | non mesuré | non mesuré | — | — |
+| Nothing Phone (1) → iPhone 16e | host (Nothing) | 13 s | 37,2 ms | 54,6 ms | 70,6 ms | 94,2 ms | 15,8 ms | 0 | 517 |
+| Nothing Phone (1) → iPhone 16e | guest (iPhone) | 67 s | 37,6 ms | 54,9 ms | 69,8 ms | 128,3 ms | 16,3 ms | 0 | 515 ¹ |
+| iPhone 16e → Nothing Phone (1) | guest (Nothing) | 92 s | 22,1 ms | 32,4 ms | 43,4 ms | 50,8 ms | 7,0 ms | 0 | 517 |
+| iPhone 16e → Nothing Phone (1) | host (iPhone) | — | non relevé | non relevé | non relevé | non relevé | non relevé | — | — |
+
+¹ iOS n’expose pas la MTU : la valeur affichée est la charge utile maximale annoncée (512 octets) + 3.
+
+Quand l’iPhone est central (invité), c’est iOS qui choisit l’intervalle de connexion, sans réglage possible : la
+latence y est la plus élevée (médiane ≈ 55 ms). Quand l’Android est central, il demande la priorité haute et le RTT
+médian tombe à ≈ 32 ms, même avec l’iPhone en peripheral.
 
 Observé dans les journaux système : intervalle de connexion 15 ms (12 × 1,25 ms, brièvement 7,5 ms), PHY LE 2M.
 Décalage d’horloge mesuré de part et d’autre : +122,5 ± 9,6 ms et −127,1 ± 10,8 ms, cohérents entre eux.
@@ -146,7 +154,8 @@ Versions et compatibilités : [KYS-0004](docs/decisions/0004-toolchain-versions.
 
 ## Limites connues
 
-- Seul le scénario Android ↔ Android a été vérifié sur téléphones ; rien n’a été vérifié sur iPhone.
+- Vérifié sur téléphones : Android ↔ Android (sonde, jeu, revanche, coupure Bluetooth) et Android ↔ iOS (sonde dans
+  les deux sens). Pas encore : une partie Android ↔ iOS, la coupure Bluetooth côté iPhone, l’arrière-plan.
 - La dérive d’horloge affichée par la sonde n’est pas fiable sur quelques minutes.
 - Le simulateur iOS n’a pas de Bluetooth : tout test iOS se fait sur un iPhone réel.
 - iOS ne permet pas de régler l’intervalle de connexion BLE ; il sera mesuré et documenté.
