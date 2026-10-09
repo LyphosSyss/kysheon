@@ -31,7 +31,9 @@ import kotlin.time.Duration.Companion.seconds
 @OptIn(ExperimentalCoroutinesApi::class)
 class FullMatchTest {
 
-    private class Device(val session: Session, val match: MatchController)
+    private class Device(val session: Session, val match: MatchController) {
+        val feedback = mutableListOf<Feedback>()
+    }
 
     private fun TestScope.trueMicros() = testScheduler.currentTime * 1_000
 
@@ -58,6 +60,7 @@ class FullMatchTest {
             while (true) {
                 delay(16)
                 device.match.frame(device.session.gameClock.nowMicros())
+                while (true) device.feedback += device.match.pollFeedback() ?: break
                 device.match.simulation?.let { device.match.moveFighterTo(it.aspect / 2) }
                 sinceShot += 16
                 if (sinceShot >= fireEveryMs && device.match.fire()) sinceShot = 0
@@ -103,6 +106,15 @@ class FullMatchTest {
         assertEquals(2_100, host.session.agreedAspectMilli.value)
         assertEquals(2_100, guest.session.agreedAspectMilli.value)
         assertEquals(0L, host.session.malformedFrames + guest.session.malformedFrames)
+
+        // Presentation feedback mirrors the game: 3 hits taken by the guest, 3 dealt by the host, one fall.
+        assertEquals(3, guest.feedback.count { it is Feedback.HitTaken })
+        assertEquals(listOf(2, 1, 0), guest.feedback.filterIsInstance<Feedback.HitTaken>().map { it.hpLeft })
+        assertEquals(3, host.feedback.count { it is Feedback.HitDealt })
+        assertEquals(1, guest.feedback.count { it is Feedback.FighterDown })
+        assertEquals(host.match.counters.handoffsSent, host.feedback.count { it is Feedback.Exited })
+        assertEquals(guest.match.counters.handoffsReceived, guest.feedback.count { it is Feedback.Entered })
+        assertTrue(host.feedback.count { it is Feedback.Fired } >= host.match.counters.handoffsSent)
     }
 
     @Test
