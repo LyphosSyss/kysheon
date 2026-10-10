@@ -73,6 +73,20 @@ class AppViewModel(
     private val mutableMode = MutableStateFlow(Mode.Game)
     val mode: StateFlow<Mode> = mutableMode.asStateFlow()
 
+    // Session-only preferences (no persistence before V2).
+    private val mutableSound = MutableStateFlow(true)
+    val soundEnabled: StateFlow<Boolean> = mutableSound.asStateFlow()
+    private val mutableHaptics = MutableStateFlow(true)
+    val hapticsEnabled: StateFlow<Boolean> = mutableHaptics.asStateFlow()
+
+    fun toggleSound() {
+        mutableSound.value = !mutableSound.value
+    }
+
+    fun toggleHaptics() {
+        mutableHaptics.value = !mutableHaptics.value
+    }
+
     private var link: Link? = null
     private var session: Job? = null
 

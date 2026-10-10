@@ -31,6 +31,10 @@ import epheis.lyphossyss.kysheon.app.resources.debug_janky
 import epheis.lyphossyss.kysheon.app.resources.debug_jitter
 import epheis.lyphossyss.kysheon.app.resources.debug_link
 import epheis.lyphossyss.kysheon.app.resources.debug_mtu
+import epheis.lyphossyss.kysheon.app.resources.debug_particles
+import epheis.lyphossyss.kysheon.app.resources.debug_backdrop
+import epheis.lyphossyss.kysheon.app.resources.backdrop_shader
+import epheis.lyphossyss.kysheon.app.resources.backdrop_canvas
 import epheis.lyphossyss.kysheon.app.resources.debug_offset
 import epheis.lyphossyss.kysheon.app.resources.debug_rtt
 import epheis.lyphossyss.kysheon.app.resources.decimal_separator
@@ -50,7 +54,13 @@ import org.jetbrains.compose.resources.stringResource
  * so the overlay itself does not disturb the frame times it reports.
  */
 @Composable
-fun DebugOverlay(screen: Screen.Game, frameStats: FrameStats, modifier: Modifier = Modifier) {
+fun DebugOverlay(
+    screen: Screen.Game,
+    frameStats: FrameStats,
+    particleCount: () -> Int,
+    backdropUsesShader: Boolean,
+    modifier: Modifier = Modifier,
+) {
     var tick by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -107,6 +117,11 @@ fun DebugOverlay(screen: Screen.Game, frameStats: FrameStats, modifier: Modifier
             stringResource(Res.string.value_pair, counters.hitsSent.toString(), counters.hitsReceived.toString()),
         )
         Line(stringResource(Res.string.debug_mtu), diagnostics?.mtu?.toString() ?: pending)
+        Line(stringResource(Res.string.debug_particles), particleCount().toString())
+        Line(
+            stringResource(Res.string.debug_backdrop),
+            stringResource(if (backdropUsesShader) Res.string.backdrop_shader else Res.string.backdrop_canvas),
+        )
         diagnostics?.platformInfo?.takeIf { it.isNotEmpty() }?.let {
             KText(it, color = KColors.muted, size = 10.sp, monospace = true)
         }

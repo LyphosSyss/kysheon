@@ -30,6 +30,13 @@ import epheis.lyphossyss.kysheon.app.debug.DebugOverlay
 import epheis.lyphossyss.kysheon.app.render.ArenaRenderer
 import epheis.lyphossyss.kysheon.app.render.FrameStats
 import epheis.lyphossyss.kysheon.app.render.Letterbox
+import epheis.lyphossyss.kysheon.app.render.rememberBackdrop
+import epheis.lyphossyss.kysheon.app.feel.rememberHaptics
+import epheis.lyphossyss.kysheon.core.Side
+import epheis.lyphossyss.kysheon.match.Feedback
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import epheis.lyphossyss.kysheon.app.resources.Res
 import epheis.lyphossyss.kysheon.app.resources.action_debug
 import epheis.lyphossyss.kysheon.app.resources.action_leave
@@ -51,32 +58,66 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 
 @Composable
-fun GameScreen(screen: Screen.Game, onRematch: () -> Unit, onLeave: () -> Unit) {
+fun GameScreen(
+    screen: Screen.Game,
+    hapticsEnabled: Boolean,
+    onRematch: () -> Unit,
+    onLeave: () -> Unit,
+) {
     val session = screen.session
     val match = screen.match
     val state by session.state.collectAsState()
     val renderer = remember(match) { ArenaRenderer(match.side) }
+    val backdrop = rememberBackdrop(match.side, if (match.side == Side.Left) KColors.host else KColors.guest)
+    val haptics = rememberHaptics(hapticsEnabled)
     val frameStats = remember(match) { FrameStats() }
     var frameNanos by remember { mutableLongStateOf(0L) }
+    var backdropSeconds by remember { mutableFloatStateOf(0f) }
     var showDebug by remember { mutableStateOf(false) }
     var rematchRequested by remember(match) { mutableStateOf(false) }
 
     // Simulation and rendering are decoupled: the loop steps the simulation at 60 Hz on the shared clock,
     // whatever the display rate; the canvas only interpolates. Only the draw phase is invalidated per frame.
-    LaunchedEffect(match) {
+    LaunchedEffect(match, haptics) {
+        var last = -1L
+        var sinceBackdrop = 0f
         while (true) {
             withFrameNanos { nanos ->
+                val dt = if (last < 0) 0f else ((nanos - last) / 1e9f).coerceAtMost(0.1f)
+                last = nanos
                 frameStats.onFrame(nanos)
                 match.frame(session.gameClock.nowMicros())
+                while (true) {
+                    val feedback = match.pollFeedback() ?: break
+                    renderer.onFeedback(feedback)
+                    when (feedback) {
+                        is Feedback.Fired -> haptics.tick()
+                        is Feedback.HitDealt -> haptics.confirm()
+                        is Feedback.HitTaken, is Feedback.FighterDown -> haptics.impact()
+                        else -> Unit
+                    }
+                }
+                renderer.update(dt, match.simulation, match.alpha)
+                // The backdrop changes slowly: refresh its own layer at ~30 Hz, the arena at the display rate.
+                sinceBackdrop += dt
+                if (sinceBackdrop >= BACKDROP_PERIOD) {
+                    backdropSeconds += sinceBackdrop
+                    sinceBackdrop = 0f
+                }
                 frameNanos = nanos
             }
         }
     }
     LaunchedEffect(state) {
         if (state !is SessionState.Ended) rematchRequested = false
+        if (state is SessionState.Countdown && match.simulation?.stepCount == 0L) renderer.reset()
     }
 
     Box(Modifier.fillMaxSize().background(KColors.background)) {
+        Canvas(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
+            val seconds = backdropSeconds // only this layer is invalidated, ~30 times per second
+            with(backdrop) { drawBackdrop(seconds) }
+        }
         Canvas(
             Modifier
                 .fillMaxSize()
@@ -104,10 +145,10 @@ fun GameScreen(screen: Screen.Game, onRematch: () -> Unit, onLeave: () -> Unit) 
                 },
         ) {
             val sim = match.simulation ?: return@Canvas
-            val frame = frameNanos // read in the draw phase: redraws every frame without recomposing
+            frameNanos // read in the draw phase: redraws every frame without recomposing
             with(renderer) {
                 val roundOver = session.state.value is SessionState.Ended
-                drawArena(sim, match.alpha, Letterbox(size.width, size.height, sim.aspect), frame, showProjectiles = !roundOver)
+                drawArena(sim, match.alpha, Letterbox(size.width, size.height, sim.aspect), showProjectiles = !roundOver)
             }
         }
 
@@ -132,10 +173,18 @@ fun GameScreen(screen: Screen.Game, onRematch: () -> Unit, onLeave: () -> Unit) 
             )
         }
         if (showDebug) {
-            DebugOverlay(screen, frameStats, Modifier.align(Alignment.BottomCenter).padding(12.dp))
+            DebugOverlay(
+                screen, frameStats,
+                particleCount = { renderer.particleCount },
+                backdropUsesShader = backdrop.usesShader,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp),
+            )
         }
     }
 }
+
+/** Refresh period of the backdrop layer, in seconds. */
+private const val BACKDROP_PERIOD = 1f / 30f
 
 @Composable
 private fun StatusOverlay(

@@ -25,6 +25,8 @@ fun App() {
     val viewModel = viewModel { AppViewModel(linkFactory) }
     val screen by viewModel.screen.collectAsState()
     val mode by viewModel.mode.collectAsState()
+    val soundEnabled by viewModel.soundEnabled.collectAsState()
+    val hapticsEnabled by viewModel.hapticsEnabled.collectAsState()
 
     // The game uses the whole safe area (no side padding: the arena must touch the seam between the phones).
     Box(
@@ -43,10 +45,19 @@ fun App() {
                 onMode = viewModel::setMode,
                 onHost = viewModel::host,
                 onJoin = viewModel::join,
+                soundEnabled = soundEnabled,
+                hapticsEnabled = hapticsEnabled,
+                onToggleSound = viewModel::toggleSound,
+                onToggleHaptics = viewModel::toggleHaptics,
             )
             is Screen.Connecting -> ConnectingScreen(current, onCancel = { viewModel.finish() })
             is Screen.Probe -> ProbeScreen(current, onFinish = { viewModel.finish() })
-            is Screen.Game -> GameScreen(current, onRematch = viewModel::rematch, onLeave = { viewModel.finish() })
+            is Screen.Game -> GameScreen(
+                current,
+                hapticsEnabled = hapticsEnabled,
+                onRematch = viewModel::rematch,
+                onLeave = { viewModel.finish() },
+            )
         }
     }
 }

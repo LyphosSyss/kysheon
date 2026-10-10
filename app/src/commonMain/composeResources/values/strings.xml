@@ -85,4 +85,12 @@
     <string name="debug_mtu">MTU</string>
     <string name="value_pair">%1$s / %2$s</string>
     <string name="value_ms_triple">%1$s / %2$s / %3$s ms</string>
+    <string name="setting_sound_on">Sound: on</string>
+    <string name="setting_sound_off">Sound: off</string>
+    <string name="setting_haptics_on">Haptics: on</string>
+    <string name="setting_haptics_off">Haptics: off</string>
+    <string name="debug_particles">Particles</string>
+    <string name="debug_backdrop">Backdrop</string>
+    <string name="backdrop_shader">GPU shader</string>
+    <string name="backdrop_canvas">Canvas fallback</string>
 </resources>

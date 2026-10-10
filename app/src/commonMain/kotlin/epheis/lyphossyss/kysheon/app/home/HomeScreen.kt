@@ -41,6 +41,10 @@ import epheis.lyphossyss.kysheon.app.resources.home_tagline
 import epheis.lyphossyss.kysheon.app.resources.lost_code
 import epheis.lyphossyss.kysheon.app.resources.mode_game
 import epheis.lyphossyss.kysheon.app.resources.mode_probe
+import epheis.lyphossyss.kysheon.app.resources.setting_haptics_off
+import epheis.lyphossyss.kysheon.app.resources.setting_haptics_on
+import epheis.lyphossyss.kysheon.app.resources.setting_sound_off
+import epheis.lyphossyss.kysheon.app.resources.setting_sound_on
 import epheis.lyphossyss.kysheon.app.Notice
 import epheis.lyphossyss.kysheon.app.theme.KButton
 import epheis.lyphossyss.kysheon.app.theme.KColors
@@ -57,6 +61,10 @@ fun HomeScreen(
     onMode: (Mode) -> Unit,
     onHost: () -> Unit,
     onJoin: () -> Unit,
+    soundEnabled: Boolean,
+    hapticsEnabled: Boolean,
+    onToggleSound: () -> Unit,
+    onToggleHaptics: () -> Unit,
 ) {
     val availability by bluetooth.availability.collectAsState()
     val ready = platformSupported && availability == BluetoothAvailability.Ready
@@ -107,6 +115,19 @@ fun HomeScreen(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             KButton(stringResource(Res.string.home_host), onHost, Modifier.weight(1f), KColors.host, enabled = ready)
             KButton(stringResource(Res.string.home_join), onJoin, Modifier.weight(1f), KColors.guest, enabled = ready)
+        }
+
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            KButton(
+                stringResource(if (soundEnabled) Res.string.setting_sound_on else Res.string.setting_sound_off),
+                onToggleSound,
+                Modifier.weight(1f),
+            )
+            KButton(
+                stringResource(if (hapticsEnabled) Res.string.setting_haptics_on else Res.string.setting_haptics_off),
+                onToggleHaptics,
+                Modifier.weight(1f),
+            )
         }
 
         screen.notice?.let { notice ->
