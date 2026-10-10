@@ -21,9 +21,19 @@ class SettingsRepositoryTest {
     @Test
     fun roundTrip() {
         val store = MemoryStore()
-        val settings = Settings(soundEnabled = false, volume = 0.35f, hapticsEnabled = false, showDebugButton = false, debugOverlayOnStart = true)
+        val settings = Settings(
+            soundEnabled = false, volume = 0.35f, hapticsEnabled = false, hapticsIntensity = 0.4f,
+            showDebugButton = false, debugOverlayOnStart = true,
+        )
         SettingsRepository(store).save(settings)
         assertEquals(settings, SettingsRepository(store).load())
+    }
+
+    @Test
+    fun hapticsLevelsMapToTheClosestPreset() {
+        assertEquals(HapticsLevel.Light, HapticsLevel.closestTo(0.35f))
+        assertEquals(HapticsLevel.Medium, HapticsLevel.closestTo(0.7f))
+        assertEquals(HapticsLevel.Strong, HapticsLevel.closestTo(0.95f))
     }
 
     @Test

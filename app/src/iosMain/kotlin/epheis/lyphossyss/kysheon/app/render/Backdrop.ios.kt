@@ -17,7 +17,7 @@ actual fun rememberBackdrop(side: Side, tint: Color): Backdrop = remember(side, 
 
 /**
  * Same program through Skia's runtime effects, which Compose uses to draw on iOS (Metal backend).
- * Skia shaders are immutable: a new one is built per draw, i.e. at the backdrop's low refresh rate only.
+ * Skia shaders are immutable: a new one is built per draw, i.e. once per size (the layer is cached).
  */
 private class SkslBackdrop(side: Side, tint: Color) : Backdrop {
     override val usesShader: Boolean = true
@@ -27,9 +27,8 @@ private class SkslBackdrop(side: Side, tint: Color) : Backdrop {
         uniform("tint", tint.red, tint.green, tint.blue, tint.alpha)
     }
 
-    override fun DrawScope.drawBackdrop(timeSeconds: Float) {
+    override fun DrawScope.drawSky() {
         builder.uniform("resolution", size.width, size.height)
-        builder.uniform("time", timeSeconds)
         drawRect(ShaderBrush(builder.makeShader().asComposeShader()))
     }
 }

@@ -6,12 +6,12 @@ import platform.UIKit.UIImpactFeedbackGenerator
 import platform.UIKit.UIImpactFeedbackStyle
 
 @Composable
-actual fun rememberHaptics(enabled: Boolean): Haptics = remember(enabled) {
-    if (enabled) IosHaptics() else NoHaptics
+actual fun rememberHaptics(enabled: Boolean, intensity: Float): Haptics = remember(enabled, intensity) {
+    if (enabled) IosHaptics(intensity.coerceIn(0.1f, 1f).toDouble()) else NoHaptics
 }
 
 /** Taptic Engine through UIKit feedback generators; prepared up front to cut the first-use latency. Main thread only. */
-private class IosHaptics : Haptics {
+private class IosHaptics(private val intensity: Double) : Haptics {
     private val light = UIImpactFeedbackGenerator(UIImpactFeedbackStyle.UIImpactFeedbackStyleLight).also { it.prepare() }
     private val medium = UIImpactFeedbackGenerator(UIImpactFeedbackStyle.UIImpactFeedbackStyleMedium).also { it.prepare() }
     private val heavy = UIImpactFeedbackGenerator(UIImpactFeedbackStyle.UIImpactFeedbackStyleHeavy).also { it.prepare() }
@@ -21,7 +21,7 @@ private class IosHaptics : Haptics {
     override fun impact() = fire(heavy)
 
     private fun fire(generator: UIImpactFeedbackGenerator) {
-        generator.impactOccurred()
+        generator.impactOccurredWithIntensity(intensity)
         generator.prepare()
     }
 }

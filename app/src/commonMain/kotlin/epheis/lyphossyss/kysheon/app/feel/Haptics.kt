@@ -14,8 +14,9 @@ interface Haptics {
     fun impact()
 }
 
+/** [intensity] in (0, 1] scales every effect (amplitude where the motor supports it, duration otherwise). */
 @Composable
-expect fun rememberHaptics(enabled: Boolean): Haptics
+expect fun rememberHaptics(enabled: Boolean, intensity: Float): Haptics
 
 internal object NoHaptics : Haptics {
     override fun tick() = Unit

@@ -31,7 +31,8 @@ import epheis.lyphossyss.kysheon.app.render.ArenaRenderer
 import epheis.lyphossyss.kysheon.app.render.FrameStats
 import epheis.lyphossyss.kysheon.app.render.Letterbox
 import epheis.lyphossyss.kysheon.app.render.rememberBackdrop
-import epheis.lyphossyss.kysheon.app.feel.rememberHaptics
+import epheis.lyphossyss.kysheon.app.render.StarField
+import epheis.lyphossyss.kysheon.app.feel.Haptics
 import epheis.lyphossyss.kysheon.core.Side
 import epheis.lyphossyss.kysheon.match.Feedback
 import epheis.lyphossyss.kysheon.app.audio.Sfx
@@ -66,6 +67,7 @@ fun GameScreen(
     screen: Screen.Game,
     settings: Settings,
     sound: SoundPlayer,
+    haptics: Haptics,
     onRematch: () -> Unit,
     onLeave: () -> Unit,
 ) {
@@ -74,7 +76,7 @@ fun GameScreen(
     val state by session.state.collectAsState()
     val renderer = remember(match) { ArenaRenderer(match.side) }
     val backdrop = rememberBackdrop(match.side, if (match.side == Side.Left) KColors.host else KColors.guest)
-    val haptics = rememberHaptics(settings.hapticsEnabled)
+    val stars = remember { StarField() }
     val frameStats = remember(match) { FrameStats() }
     var frameNanos by remember { mutableLongStateOf(0L) }
     var backdropSeconds by remember { mutableFloatStateOf(0f) }
@@ -158,9 +160,13 @@ fun GameScreen(
     }
 
     Box(Modifier.fillMaxSize().background(KColors.background)) {
+        // Static sky: reads no state, so its offscreen layer is drawn once and then reused as a texture.
         Canvas(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
-            val seconds = backdropSeconds // only this layer is invalidated, ~30 times per second
-            with(backdrop) { drawBackdrop(seconds) }
+            with(backdrop) { drawSky() }
+        }
+        Canvas(Modifier.fillMaxSize()) {
+            val seconds = backdropSeconds // only the stars are invalidated, ~30 times per second
+            with(stars) { drawStars(seconds) }
         }
         Canvas(
             Modifier

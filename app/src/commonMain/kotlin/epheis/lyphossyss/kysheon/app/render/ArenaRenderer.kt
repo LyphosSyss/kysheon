@@ -230,10 +230,6 @@ class ArenaRenderer(private val side: Side) {
         val cy = snap(box.y(sim.fighterInterpolatedY(alpha)), px)
         val spriteSide = fighterSprite.width * px * SPRITE_SCALE
 
-        // Aura: two concentric squares of light, additive.
-        drawRect(own, Offset(cx - spriteSide, cy - spriteSide), Size(spriteSide * 2, spriteSide * 2), alpha = 0.04f, blendMode = BlendMode.Plus)
-        drawRect(own, Offset(cx - spriteSide * 0.7f, cy - spriteSide * 0.7f), Size(spriteSide * 1.4f, spriteSide * 1.4f), alpha = 0.06f, blendMode = BlendMode.Plus)
-
         if (!sim.isDown) orbit(cx, cy, spriteSide * 0.85f, px)
 
         drawImage(

@@ -20,7 +20,7 @@ actual fun rememberBackdrop(side: Side, tint: Color): Backdrop = remember(side, 
     }
 }
 
-/** AGSL runtime shader (API 33+). One shader object, uniforms updated before each draw. */
+/** AGSL runtime shader (API 33+), run once per size: the layer that draws it is cached. */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 private class AgslBackdrop(side: Side, tint: Color) : Backdrop {
     override val usesShader: Boolean = true
@@ -31,9 +31,8 @@ private class AgslBackdrop(side: Side, tint: Color) : Backdrop {
     }
     private val brush = ShaderBrush(shader)
 
-    override fun DrawScope.drawBackdrop(timeSeconds: Float) {
+    override fun DrawScope.drawSky() {
         shader.setFloatUniform("resolution", size.width, size.height)
-        shader.setFloatUniform("time", timeSeconds)
         drawRect(brush)
     }
 }

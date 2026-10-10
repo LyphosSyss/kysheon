@@ -23,6 +23,10 @@ import epheis.lyphossyss.kysheon.app.resources.action_back
 import epheis.lyphossyss.kysheon.app.resources.settings_debug_button
 import epheis.lyphossyss.kysheon.app.resources.settings_debug_on_start
 import epheis.lyphossyss.kysheon.app.resources.settings_haptics
+import epheis.lyphossyss.kysheon.app.resources.settings_haptics_intensity
+import epheis.lyphossyss.kysheon.app.resources.haptics_light
+import epheis.lyphossyss.kysheon.app.resources.haptics_medium
+import epheis.lyphossyss.kysheon.app.resources.haptics_strong
 import epheis.lyphossyss.kysheon.app.resources.settings_section_debug
 import epheis.lyphossyss.kysheon.app.resources.settings_section_haptics
 import epheis.lyphossyss.kysheon.app.resources.settings_section_sound
@@ -43,6 +47,7 @@ fun SettingsScreen(
     settings: Settings,
     onChange: ((Settings) -> Settings) -> Unit,
     onPreviewSound: () -> Unit,
+    onPreviewHaptics: (HapticsLevel) -> Unit,
     onBack: () -> Unit,
 ) {
     SystemBackHandler(onBack = onBack)
@@ -75,6 +80,31 @@ fun SettingsScreen(
         Section(stringResource(Res.string.settings_section_haptics)) {
             SwitchRow(stringResource(Res.string.settings_haptics), settings.hapticsEnabled) { on ->
                 onChange { it.copy(hapticsEnabled = on) }
+            }
+            KText(
+                stringResource(Res.string.settings_haptics_intensity),
+                color = if (settings.hapticsEnabled) KColors.text else KColors.muted,
+            )
+            val selected = HapticsLevel.closestTo(settings.hapticsIntensity)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for (level in HapticsLevel.entries) {
+                    KButton(
+                        label = stringResource(
+                            when (level) {
+                                HapticsLevel.Light -> Res.string.haptics_light
+                                HapticsLevel.Medium -> Res.string.haptics_medium
+                                HapticsLevel.Strong -> Res.string.haptics_strong
+                            },
+                        ),
+                        onClick = {
+                            onChange { it.copy(hapticsIntensity = level.intensity) }
+                            onPreviewHaptics(level)
+                        },
+                        modifier = Modifier.weight(1f),
+                        accent = if (level == selected) KColors.host else KColors.surfaceHigh,
+                        enabled = settings.hapticsEnabled,
+                    )
+                }
             }
         }
 

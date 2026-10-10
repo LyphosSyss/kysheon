@@ -18,6 +18,7 @@ import epheis.lyphossyss.kysheon.app.platform.rememberLinkFactory
 import epheis.lyphossyss.kysheon.app.probe.ProbeScreen
 import epheis.lyphossyss.kysheon.app.theme.KColors
 import epheis.lyphossyss.kysheon.app.audio.Sfx
+import epheis.lyphossyss.kysheon.app.feel.rememberHaptics
 import epheis.lyphossyss.kysheon.app.audio.rememberSoundPlayer
 import epheis.lyphossyss.kysheon.app.settings.SettingsRepository
 import epheis.lyphossyss.kysheon.app.settings.SettingsScreen
@@ -36,6 +37,7 @@ fun App() {
     // One player for the whole app, so that the settings screen can preview the volume.
     val sound = rememberSoundPlayer(enabled = settings.soundEnabled)
     LaunchedEffect(sound, settings.volume) { sound.setVolume(settings.volume) }
+    val haptics = rememberHaptics(settings.hapticsEnabled, settings.hapticsIntensity)
 
     // The game uses the whole safe area (no side padding: the arena must touch the seam between the phones).
     Box(
@@ -60,6 +62,7 @@ fun App() {
                 settings = settings,
                 onChange = viewModel::updateSettings,
                 onPreviewSound = { sound.play(Sfx.HitDealt) },
+                onPreviewHaptics = { haptics.impact() },
                 onBack = viewModel::closeSettings,
             )
             is Screen.Connecting -> ConnectingScreen(current, onCancel = { viewModel.finish() })
@@ -68,6 +71,7 @@ fun App() {
                 current,
                 settings = settings,
                 sound = sound,
+                haptics = haptics,
                 onRematch = viewModel::rematch,
                 onLeave = { viewModel.finish() },
             )

@@ -101,4 +101,8 @@
     <string name="settings_debug_on_start">Ouvrir l’overlay de debug au début d’une partie</string>
     <string name="settings_on">Activé</string>
     <string name="settings_off">Désactivé</string>
+    <string name="settings_haptics_intensity">Intensité</string>
+    <string name="haptics_light">Légères</string>
+    <string name="haptics_medium">Moyennes</string>
+    <string name="haptics_strong">Fortes</string>
 </resources>

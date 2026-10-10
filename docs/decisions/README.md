@@ -53,3 +53,4 @@ Le corps cite les fiches liées avec des liens relatifs, par ex. `[KYS-0002](000
 | [KYS-0040](0040-procedural-audio.md) | Sons synthétisés dans le code | accepted |
 | [KYS-0041](0041-sacred-direction-and-game-feel.md) | Direction « sacrée » et ressenti de jeu (V1.5) | accepted |
 | [KYS-0042](0042-settings-persistence.md) | Écran Réglages et persistance des préférences | accepted |
+| [KYS-0043](0043-maps-and-obstacles.md) | Maps à obstacles : architecture et budget prévus | proposed |

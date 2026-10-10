@@ -103,4 +103,8 @@
     <string name="settings_debug_on_start">Open the debug overlay when a game starts</string>
     <string name="settings_on">On</string>
     <string name="settings_off">Off</string>
+    <string name="settings_haptics_intensity">Strength</string>
+    <string name="haptics_light">Light</string>
+    <string name="haptics_medium">Medium</string>
+    <string name="haptics_strong">Strong</string>
 </resources>
