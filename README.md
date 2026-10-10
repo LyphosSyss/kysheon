@@ -30,6 +30,10 @@ appareils et un **protocole binaire** conçu et testé.
 | Lien BLE iOS (guest et host) | fait | **vérifié sur iPhone 16e** (iOS 27.0) avec le Nothing Phone (1), les deux rôles, sonde uniquement |
 | Sonde de latence (écran de mesure) | fait | tests en temps virtuel ; mesures réelles ci-dessous |
 | Écrans de jeu, overlay de debug | fait | partie complète et revanche jouées sur les deux Android ; build Xcode + simulateur iOS (accueil) |
+| V1.5 : direction pixel art (Soleil contre Lune), particules, tremblement, fond en shader | fait | vu sur Nothing Phone (1) et iPhone 16e ; shader AGSL confirmé sur Android 15 |
+| V1.5 : sons synthétisés dans le code, vibrations | fait | entendus et ressentis sur téléphones (avis de l’auteur) |
+| V1.5 : réglages (son, volume, vibrations et intensité, debug), mémorisés | fait | tests + simulateur iOS ; intensité des vibrations non encore essayée sur téléphone |
+| V1.5 : icône, écran de démarrage, titre de l’accueil | fait | vus sur Nothing Phone (1) |
 | Android ↔ iOS (sonde dans les deux sens, partie, coupure Bluetooth côté iPhone) | fait | **vérifié sur téléphones** (iPhone 16e ↔ Nothing Phone (1)) |
 | Coupure Bluetooth en pleine partie (côté invité) | fait | **vérifié sur téléphones** : retour à l’accueil avec message des deux côtés, aucun crash |
 | Coupure côté hôte, hors de portée, arrière-plan | **non vérifié** | voir [`docs/MANUAL-TESTS.md`](docs/MANUAL-TESTS.md) |
@@ -159,6 +163,9 @@ le rôle peripheral est requis et la couche BLE est écrite depuis la documentat
 Versions et compatibilités : [KYS-0004](docs/decisions/0004-toolchain-versions.md).
 
 ## Limites connues
+
+- Fluidité de la V1.5 : sur le Nothing Phone (1), image p95 à 16,7 ms (8,4 ms en V1) ; cause encore à confirmer
+  (rafraîchissement adaptatif de l’écran ou coût de rendu), mesure système à refaire.
 
 - Vérifié sur téléphones : Android ↔ Android (sonde, jeu, revanche, coupure Bluetooth) et Android ↔ iOS (sonde dans
   les deux sens, partie avec l’iPhone hôte, coupure Bluetooth côté iPhone). Pas encore : coupure côté hôte Android,
