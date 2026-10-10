@@ -34,6 +34,10 @@ import epheis.lyphossyss.kysheon.app.render.rememberBackdrop
 import epheis.lyphossyss.kysheon.app.feel.rememberHaptics
 import epheis.lyphossyss.kysheon.core.Side
 import epheis.lyphossyss.kysheon.match.Feedback
+import epheis.lyphossyss.kysheon.app.audio.Sfx
+import epheis.lyphossyss.kysheon.app.audio.SoundPlayer
+import epheis.lyphossyss.kysheon.app.settings.Settings
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
@@ -60,7 +64,8 @@ import kotlin.math.abs
 @Composable
 fun GameScreen(
     screen: Screen.Game,
-    hapticsEnabled: Boolean,
+    settings: Settings,
+    sound: SoundPlayer,
     onRematch: () -> Unit,
     onLeave: () -> Unit,
 ) {
@@ -69,18 +74,20 @@ fun GameScreen(
     val state by session.state.collectAsState()
     val renderer = remember(match) { ArenaRenderer(match.side) }
     val backdrop = rememberBackdrop(match.side, if (match.side == Side.Left) KColors.host else KColors.guest)
-    val haptics = rememberHaptics(hapticsEnabled)
+    val haptics = rememberHaptics(settings.hapticsEnabled)
     val frameStats = remember(match) { FrameStats() }
     var frameNanos by remember { mutableLongStateOf(0L) }
     var backdropSeconds by remember { mutableFloatStateOf(0f) }
-    var showDebug by remember { mutableStateOf(false) }
+    var showDebug by remember(match) { mutableStateOf(settings.debugOverlayOnStart) }
     var rematchRequested by remember(match) { mutableStateOf(false) }
 
     // Simulation and rendering are decoupled: the loop steps the simulation at 60 Hz on the shared clock,
     // whatever the display rate; the canvas only interpolates. Only the draw phase is invalidated per frame.
-    LaunchedEffect(match, haptics) {
+    LaunchedEffect(match, haptics, sound) {
         var last = -1L
         var sinceBackdrop = 0f
+        var countdownShown = -1L
+        var wasCountdown = false
         while (true) {
             withFrameNanos { nanos ->
                 val dt = if (last < 0) 0f else ((nanos - last) / 1e9f).coerceAtMost(0.1f)
@@ -91,11 +98,34 @@ fun GameScreen(
                     val feedback = match.pollFeedback() ?: break
                     renderer.onFeedback(feedback)
                     when (feedback) {
-                        is Feedback.Fired -> haptics.tick()
-                        is Feedback.HitDealt -> haptics.confirm()
-                        is Feedback.HitTaken, is Feedback.FighterDown -> haptics.impact()
-                        else -> Unit
+                        is Feedback.Fired -> {
+                            haptics.tick()
+                            sound.play(Sfx.Fire)
+                        }
+                        is Feedback.Entered -> sound.play(Sfx.ProjectileEnter)
+                        is Feedback.HitDealt -> {
+                            haptics.confirm()
+                            sound.play(Sfx.HitDealt)
+                        }
+                        is Feedback.HitTaken -> {
+                            haptics.impact()
+                            sound.play(Sfx.HitTaken)
+                        }
+                        is Feedback.FighterDown -> haptics.impact()
+                        is Feedback.Exited -> Unit
                     }
+                }
+                // Countdown ticks on each new digit, then the start gong.
+                val current = session.state.value
+                if (current is SessionState.Countdown) {
+                    val remaining = (current.atHostMicros - session.gameClock.nowMicros() + 999_999) / 1_000_000
+                    if (remaining in 1..3 && remaining != countdownShown) sound.play(Sfx.Countdown)
+                    countdownShown = remaining
+                    wasCountdown = true
+                } else {
+                    if (wasCountdown && current == SessionState.Running) sound.play(Sfx.Start)
+                    wasCountdown = false
+                    countdownShown = -1L
                 }
                 renderer.update(dt, match.simulation, match.alpha)
                 // The backdrop changes slowly: refresh its own layer at ~30 Hz, the arena at the display rate.
@@ -109,6 +139,20 @@ fun GameScreen(
         }
     }
     LaunchedEffect(state) {
+        val ended = state as? SessionState.Ended
+        if (ended != null) {
+            // Crossing END messages can still turn the result into a draw: let it settle before the fanfare.
+            delay(RESULT_SOUND_DELAY_MS)
+            val settled = session.state.value as? SessionState.Ended ?: return@LaunchedEffect
+            val winner = settled.winner
+            sound.play(
+                when {
+                    winner == null -> Sfx.Draw
+                    winner == session.role -> Sfx.Victory
+                    else -> Sfx.Defeat
+                },
+            )
+        }
         if (state !is SessionState.Ended) rematchRequested = false
         if (state is SessionState.Countdown && match.simulation?.stepCount == 0L) renderer.reset()
     }
@@ -165,12 +209,14 @@ fun GameScreen(
             onLeave = onLeave,
         )
 
-        Column(Modifier.align(Alignment.TopCenter).padding(top = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            KButton(
-                stringResource(Res.string.action_debug),
-                onClick = { showDebug = !showDebug },
-                accent = if (showDebug) KColors.text else KColors.surfaceHigh,
-            )
+        if (settings.showDebugButton) {
+            Column(Modifier.align(Alignment.TopCenter).padding(top = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                KButton(
+                    stringResource(Res.string.action_debug),
+                    onClick = { showDebug = !showDebug },
+                    accent = if (showDebug) KColors.text else KColors.surfaceHigh,
+                )
+            }
         }
         if (showDebug) {
             DebugOverlay(
@@ -182,6 +228,8 @@ fun GameScreen(
         }
     }
 }
+
+private const val RESULT_SOUND_DELAY_MS = 300L
 
 /** Refresh period of the backdrop layer, in seconds. */
 private const val BACKDROP_PERIOD = 1f / 30f

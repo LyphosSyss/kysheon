@@ -83,12 +83,22 @@
     <string name="debug_mtu">MTU</string>
     <string name="value_pair">%1$s / %2$s</string>
     <string name="value_ms_triple">%1$s / %2$s / %3$s ms</string>
-    <string name="setting_sound_on">Son : activé</string>
-    <string name="setting_sound_off">Son : coupé</string>
-    <string name="setting_haptics_on">Vibrations : activées</string>
-    <string name="setting_haptics_off">Vibrations : coupées</string>
     <string name="debug_particles">Particules</string>
     <string name="debug_backdrop">Fond</string>
     <string name="backdrop_shader">shader GPU</string>
     <string name="backdrop_canvas">repli Canvas</string>
+    <string name="action_settings">Réglages</string>
+    <string name="action_back">Retour</string>
+    <string name="settings_title">Réglages</string>
+    <string name="settings_section_sound">Son</string>
+    <string name="settings_sound">Sons du jeu</string>
+    <string name="settings_volume">Volume</string>
+    <string name="settings_volume_value">%1$s %</string>
+    <string name="settings_section_haptics">Vibrations</string>
+    <string name="settings_haptics">Vibrations au tir et aux impacts</string>
+    <string name="settings_section_debug">Debug</string>
+    <string name="settings_debug_button">Bouton Debug pendant une partie</string>
+    <string name="settings_debug_on_start">Ouvrir l’overlay de debug au début d’une partie</string>
+    <string name="settings_on">Activé</string>
+    <string name="settings_off">Désactivé</string>
 </resources>

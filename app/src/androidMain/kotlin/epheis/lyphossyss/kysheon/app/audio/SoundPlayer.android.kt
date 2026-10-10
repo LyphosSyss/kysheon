@@ -44,6 +44,7 @@ private class AndroidSoundPlayer : BankedSoundPlayer<Array<Array<AudioTrack>>>()
         // A static track that played to its end stays "playing" with its head at the end: stop, rewind, play.
         track.stop()
         track.reloadStaticData()
+        track.setVolume(volume)
         track.play()
     }
 

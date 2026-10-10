@@ -17,16 +17,25 @@ import epheis.lyphossyss.kysheon.app.platform.rememberBluetoothAccess
 import epheis.lyphossyss.kysheon.app.platform.rememberLinkFactory
 import epheis.lyphossyss.kysheon.app.probe.ProbeScreen
 import epheis.lyphossyss.kysheon.app.theme.KColors
+import epheis.lyphossyss.kysheon.app.audio.Sfx
+import epheis.lyphossyss.kysheon.app.audio.rememberSoundPlayer
+import epheis.lyphossyss.kysheon.app.settings.SettingsRepository
+import epheis.lyphossyss.kysheon.app.settings.SettingsScreen
+import epheis.lyphossyss.kysheon.app.settings.rememberKeyValueStore
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun App() {
     val linkFactory = rememberLinkFactory()
     val bluetooth = rememberBluetoothAccess()
-    val viewModel = viewModel { AppViewModel(linkFactory) }
+    val store = rememberKeyValueStore()
+    val viewModel = viewModel { AppViewModel(linkFactory, SettingsRepository(store)) }
     val screen by viewModel.screen.collectAsState()
     val mode by viewModel.mode.collectAsState()
-    val soundEnabled by viewModel.soundEnabled.collectAsState()
-    val hapticsEnabled by viewModel.hapticsEnabled.collectAsState()
+    val settings by viewModel.settings.collectAsState()
+    // One player for the whole app, so that the settings screen can preview the volume.
+    val sound = rememberSoundPlayer(enabled = settings.soundEnabled)
+    LaunchedEffect(sound, settings.volume) { sound.setVolume(settings.volume) }
 
     // The game uses the whole safe area (no side padding: the arena must touch the seam between the phones).
     Box(
@@ -45,16 +54,20 @@ fun App() {
                 onMode = viewModel::setMode,
                 onHost = viewModel::host,
                 onJoin = viewModel::join,
-                soundEnabled = soundEnabled,
-                hapticsEnabled = hapticsEnabled,
-                onToggleSound = viewModel::toggleSound,
-                onToggleHaptics = viewModel::toggleHaptics,
+                onSettings = viewModel::openSettings,
+            )
+            Screen.Settings -> SettingsScreen(
+                settings = settings,
+                onChange = viewModel::updateSettings,
+                onPreviewSound = { sound.play(Sfx.HitDealt) },
+                onBack = viewModel::closeSettings,
             )
             is Screen.Connecting -> ConnectingScreen(current, onCancel = { viewModel.finish() })
             is Screen.Probe -> ProbeScreen(current, onFinish = { viewModel.finish() })
             is Screen.Game -> GameScreen(
                 current,
-                hapticsEnabled = hapticsEnabled,
+                settings = settings,
+                sound = sound,
                 onRematch = viewModel::rematch,
                 onLeave = { viewModel.finish() },
             )

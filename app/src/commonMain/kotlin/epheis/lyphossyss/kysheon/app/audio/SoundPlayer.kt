@@ -18,6 +18,9 @@ interface SoundPlayer {
     /** Starts [sfx] now. Overlapping calls are mixed, within the platform voice budget. Call from the main thread. */
     fun play(sfx: Sfx)
 
+    /** Master volume in [0, 1], applied from the next [play] on. */
+    fun setVolume(volume: Float)
+
     /** Frees every platform resource. [play] becomes a no-op. Idempotent. */
     fun release()
 }
@@ -25,6 +28,8 @@ interface SoundPlayer {
 /** Plays nothing: sound turned off, previews, tests. */
 object SilentSoundPlayer : SoundPlayer {
     override fun play(sfx: Sfx) = Unit
+
+    override fun setVolume(volume: Float) = Unit
 
     override fun release() = Unit
 }
@@ -46,6 +51,14 @@ expect fun rememberSoundPlayer(enabled: Boolean): SoundPlayer
 internal abstract class BankedSoundPlayer<B : Any> : SoundPlayer {
     private var bank: B? = null
     private var released = false
+
+    /** Master volume in [0, 1], read by [start]. Main thread. */
+    protected var volume: Float = 1f
+        private set
+
+    final override fun setVolume(volume: Float) {
+        this.volume = volume.coerceIn(0f, 1f)
+    }
 
     /** Renders the [Synth] buffers and creates the platform resources. Background thread. Null when unavailable. */
     protected abstract fun build(): B?

@@ -62,6 +62,7 @@ private class IosSoundPlayer : BankedSoundPlayer<IosBank>() {
         val node = bank.nodes[bank.next]
         bank.next = (bank.next + 1) % bank.nodes.size
         node.stop()
+        node.volume = volume
         node.scheduleBuffer(buffer, completionHandler = null)
         node.play()
     }

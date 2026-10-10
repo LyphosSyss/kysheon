@@ -3,6 +3,8 @@ package epheis.lyphossyss.kysheon.app
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import epheis.lyphossyss.kysheon.app.platform.LinkFactory
+import epheis.lyphossyss.kysheon.app.settings.Settings
+import epheis.lyphossyss.kysheon.app.settings.SettingsRepository
 import epheis.lyphossyss.kysheon.link.DiagnosableLink
 import epheis.lyphossyss.kysheon.link.Link
 import epheis.lyphossyss.kysheon.link.LinkDiagnostics
@@ -41,6 +43,8 @@ sealed interface Notice {
 sealed interface Screen {
     data class Home(val notice: Notice? = null) : Screen
 
+    data object Settings : Screen
+
     data class Connecting(val role: Role, val state: StateFlow<LinkState>) : Screen
 
     data class Probe(
@@ -64,6 +68,7 @@ sealed interface Screen {
  */
 class AppViewModel(
     private val linkFactory: LinkFactory,
+    private val settingsRepository: SettingsRepository,
     private val clock: MonotonicClock = SystemMonotonicClock(),
 ) : ViewModel() {
 
@@ -73,18 +78,21 @@ class AppViewModel(
     private val mutableMode = MutableStateFlow(Mode.Game)
     val mode: StateFlow<Mode> = mutableMode.asStateFlow()
 
-    // Session-only preferences (no persistence before V2).
-    private val mutableSound = MutableStateFlow(true)
-    val soundEnabled: StateFlow<Boolean> = mutableSound.asStateFlow()
-    private val mutableHaptics = MutableStateFlow(true)
-    val hapticsEnabled: StateFlow<Boolean> = mutableHaptics.asStateFlow()
+    private val mutableSettings = MutableStateFlow(settingsRepository.load())
+    val settings: StateFlow<Settings> = mutableSettings.asStateFlow()
 
-    fun toggleSound() {
-        mutableSound.value = !mutableSound.value
+    fun updateSettings(transform: (Settings) -> Settings) {
+        val updated = transform(mutableSettings.value)
+        mutableSettings.value = updated
+        settingsRepository.save(updated)
     }
 
-    fun toggleHaptics() {
-        mutableHaptics.value = !mutableHaptics.value
+    fun openSettings() {
+        if (mutableScreen.value is Screen.Home) mutableScreen.value = Screen.Settings
+    }
+
+    fun closeSettings() {
+        if (mutableScreen.value == Screen.Settings) mutableScreen.value = Screen.Home()
     }
 
     private var link: Link? = null

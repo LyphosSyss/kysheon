@@ -4,6 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -81,5 +91,68 @@ fun KButton(
             },
             weight = FontWeight.SemiBold,
         )
+    }
+}
+
+/** On/off switch drawn with foundation only, exposed as a toggleable control to accessibility services. */
+@Composable
+fun KSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    androidx.compose.foundation.layout.Box(
+        modifier = modifier
+            .size(width = 52.dp, height = 30.dp)
+            .clip(RoundedCornerShape(15.dp))
+            .background(if (checked) KColors.host else KColors.surfaceHigh)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+            .padding(4.dp),
+        contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart,
+    ) {
+        androidx.compose.foundation.layout.Box(
+            Modifier.size(22.dp).clip(RoundedCornerShape(11.dp)).background(if (checked) KColors.background else KColors.muted),
+        )
+    }
+}
+
+/**
+ * Horizontal slider for a value in [0, 1]: drag or tap on the track. Exposes a progress range and a set-progress
+ * action to accessibility services. [onValueChangeFinished] fires when the finger lifts (e.g. to preview a sound).
+ */
+@Composable
+fun KSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    onValueChangeFinished: () -> Unit = {},
+) {
+    val current = androidx.compose.runtime.rememberUpdatedState(onValueChange)
+    androidx.compose.foundation.Canvas(
+        modifier = modifier
+            .height(36.dp)
+            .semantics {
+                progressBarRangeInfo = ProgressBarRangeInfo(value, 0f..1f)
+                setProgress { target ->
+                    current.value(target.coerceIn(0f, 1f))
+                    true
+                }
+            }
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    current.value((down.position.x / size.width).coerceIn(0f, 1f))
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        current.value((change.position.x / size.width).coerceIn(0f, 1f))
+                        change.consume()
+                        if (!change.pressed) break
+                    }
+                    onValueChangeFinished()
+                }
+            },
+    ) {
+        val y = size.height / 2
+        val x = size.width * value.coerceIn(0f, 1f)
+        drawLine(KColors.surfaceHigh, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), strokeWidth = 8f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawLine(KColors.host, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(x, y), strokeWidth = 8f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawCircle(KColors.light, radius = size.height * 0.32f, center = androidx.compose.ui.geometry.Offset(x, y))
     }
 }
