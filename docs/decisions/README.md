@@ -43,3 +43,4 @@ Le corps cite les fiches liées avec des liens relatifs, par ex. `[KYS-0002](000
 | [KYS-0022](0022-android-ble-guest-role.md) | BLE Android : rôle invité | proposed |
 | [KYS-0023](0023-link-android-lint.md) | Lint du module `:link` | proposed |
 | [KYS-0024](0024-android-ble-device-findings.md) | BLE Android : corrections du premier essai sur téléphones | accepted |
+| [KYS-0041](0041-sacred-direction-and-game-feel.md) | Direction « sacrée » et ressenti de jeu (V1.5) | accepted |
