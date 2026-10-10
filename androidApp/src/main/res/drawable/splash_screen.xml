@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launch window before Android 12: the emblem centered on the night background. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_background" />
+    <item android:width="200dp" android:height="200dp" android:gravity="center">
+        <bitmap android:src="@drawable/splash_logo" android:filter="false" />
+    </item>
+</layer-list>

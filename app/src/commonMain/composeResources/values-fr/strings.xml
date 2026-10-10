@@ -2,7 +2,7 @@
 <resources>
     <string name="decimal_separator">,</string>
 
-    <string name="home_tagline">Deux téléphones, une seule arène.</string>
+    <string name="home_tagline">Forgez votre Panthéon, pas à pas.</string>
     <string name="home_host">Héberger</string>
     <string name="home_join">Rejoindre</string>
     <string name="home_probe_hint">Sonde de latence : pose les deux téléphones côte à côte, héberge sur l’un, rejoins sur l’autre.</string>

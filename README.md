@@ -1,5 +1,9 @@
 # Kysheon
 
+![Kysheon](docs/images/kysheon-banner.jpg)
+
+**Forgez votre Panthéon, pas à pas.**
+
 [![CI](https://github.com/LyphosSyss/kysheon/actions/workflows/ci.yml/badge.svg)](https://github.com/LyphosSyss/kysheon/actions/workflows/ci.yml)
 
 Deux téléphones posés côte à côte forment une seule arène. Chaque écran est une moitié. Des formes géométriques

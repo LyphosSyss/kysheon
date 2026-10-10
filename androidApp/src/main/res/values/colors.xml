@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Background of the emblem in the source logo, so the adaptive icon has no visible seam. -->
+    <color name="ic_launcher_background">#141418</color>
+    <!-- KColors.background -->
+    <color name="splash_background">#0B0D16</color>
+</resources>

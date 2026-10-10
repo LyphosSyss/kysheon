@@ -1,22 +1,20 @@
 package epheis.lyphossyss.kysheon.app.home
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import org.jetbrains.compose.resources.painterResource
+import epheis.lyphossyss.kysheon.app.resources.title_banner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -68,9 +66,13 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Emblem(Modifier.size(96.dp))
-        KText(stringResource(Res.string.app_name), size = 40.sp, weight = FontWeight.Bold)
-        KText(stringResource(Res.string.home_tagline), color = KColors.muted)
+        Image(
+            painter = painterResource(Res.drawable.title_banner),
+            contentDescription = stringResource(Res.string.app_name),
+            modifier = Modifier.fillMaxWidth(),
+            contentScale = ContentScale.FillWidth,
+        )
+        KText(stringResource(Res.string.home_tagline), color = KColors.host, size = 17.sp, weight = FontWeight.SemiBold)
 
         if (!platformSupported) {
             KText(stringResource(Res.string.bt_platform_pending), color = KColors.danger, size = 14.sp)
@@ -124,27 +126,5 @@ fun HomeScreen(
             color = KColors.muted,
             size = 13.sp,
         )
-    }
-}
-
-/** Two halves meeting at a seam, crossed by a projectile: drawn, no image asset. */
-@Composable
-private fun Emblem(modifier: Modifier = Modifier) {
-    Canvas(modifier) {
-        val gap = size.width * 0.04f
-        val half = (size.width - gap) / 2
-        val radius = CornerRadius(size.width * 0.08f)
-        drawRoundRect(KColors.host, Offset.Zero, Size(half, size.height), radius)
-        drawRoundRect(KColors.guest, Offset(half + gap, 0f), Size(half, size.height), radius)
-        val c = Offset(size.width / 2, size.height / 2)
-        val r = size.width * 0.12f
-        val diamond = Path().apply {
-            moveTo(c.x, c.y - r)
-            lineTo(c.x + r, c.y)
-            lineTo(c.x, c.y + r)
-            lineTo(c.x - r, c.y)
-            close()
-        }
-        drawPath(diamond, KColors.background)
     }
 }

@@ -1,6 +1,7 @@
 package epheis.lyphossyss.kysheon.app.theme
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -75,8 +76,9 @@ fun KButton(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(4.dp))
             .background(if (enabled) accent else KColors.surface)
+            .border(2.dp, if (enabled) KColors.light.copy(alpha = 0.18f) else KColors.surfaceHigh, RoundedCornerShape(4.dp))
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center,

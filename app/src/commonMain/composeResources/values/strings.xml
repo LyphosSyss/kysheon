@@ -4,7 +4,7 @@
     <string name="decimal_separator">.</string>
     <string name="value_pending">…</string>
 
-    <string name="home_tagline">Two phones, one arena.</string>
+    <string name="home_tagline">Forge your Pantheon, step by step.</string>
     <string name="home_host">Host</string>
     <string name="home_join">Join</string>
     <string name="home_probe_hint">Latency probe: put both phones side by side, host on one, join on the other.</string>
